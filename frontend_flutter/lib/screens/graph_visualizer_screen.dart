@@ -211,7 +211,7 @@ class _GraphVisualizerScreenState extends State<GraphVisualizerScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
@@ -258,7 +258,7 @@ class _GraphVisualizerScreenState extends State<GraphVisualizerScreen> {
                         margin: const EdgeInsets.symmetric(vertical: 3),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: isAdded ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                          color: isAdded ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -306,7 +306,7 @@ class _GraphVisualizerScreenState extends State<GraphVisualizerScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFF141926),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.greenAccent.withOpacity(0.3)),
+            border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: const [
@@ -457,7 +457,7 @@ class MstGraphPainter extends CustomPainter {
     }
 
     final edgePaint = Paint()
-      ..color = const Color(0xFF00F0FF).withOpacity(0.8)
+      ..color = const Color(0xFF00F0FF).withValues(alpha: 0.8)
       ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke;
 

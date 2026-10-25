@@ -164,7 +164,7 @@ class VivaPrepScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: const Color(0xFFFF4458).withOpacity(0.2),
+              color: const Color(0xFFFF4458).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(co, style: const TextStyle(color: Color(0xFFFF4458), fontWeight: FontWeight.bold, fontSize: 11)),

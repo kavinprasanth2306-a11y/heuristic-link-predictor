@@ -69,10 +69,10 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
               end: Alignment.bottomCenter,
             ),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFFFF4458).withOpacity(0.6), width: 2),
+            border: Border.all(color: const Color(0xFFFF4458).withValues(alpha: 0.6), width: 2),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFFF4458).withOpacity(0.3),
+                color: const Color(0xFFFF4458).withValues(alpha: 0.3),
                 blurRadius: 30,
                 spreadRadius: 5,
               )
@@ -125,7 +125,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
+                  color: Colors.white.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -145,9 +145,9 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.1),
+                    color: Colors.amber.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -234,9 +234,9 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF4458).withOpacity(0.2),
+                    color: const Color(0xFFFF4458).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFF4458).withOpacity(0.5)),
+                    border: Border.all(color: const Color(0xFFFF4458).withValues(alpha: 0.5)),
                   ),
                   child: Text(
                     "${profile.matchScore}% Match",
@@ -263,7 +263,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                 return Chip(
                   label: Text(badge, style: const TextStyle(fontSize: 11, color: Colors.white)),
                   backgroundColor: const Color(0xFF1E293B),
-                  side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                  side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                 );
               }).toList(),
             ),
@@ -403,7 +403,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.5),
+                              color: Colors.black.withValues(alpha: 0.5),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -430,8 +430,8 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                                   gradient: LinearGradient(
                                     colors: [
                                       Colors.transparent,
-                                      Colors.black.withOpacity(0.2),
-                                      Colors.black.withOpacity(0.95),
+                                      Colors.black.withValues(alpha: 0.2),
+                                      Colors.black.withValues(alpha: 0.95),
                                     ],
                                     stops: const [0.4, 0.65, 1.0],
                                     begin: Alignment.topCenter,
@@ -453,7 +453,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFFFF4458).withOpacity(0.4),
+                                        color: const Color(0xFFFF4458).withValues(alpha: 0.4),
                                         blurRadius: 10,
                                       ),
                                     ],
@@ -552,7 +552,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                                         ...profile.interests.take(3).map((tag) => Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                               decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(0.12),
+                                                color: Colors.white.withValues(alpha: 0.12),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               child: Text(tag, style: const TextStyle(color: Colors.white, fontSize: 11)),
@@ -560,7 +560,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                                         ...profile.lifestyleTraits.take(2).map((tag) => Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFF00F0FF).withOpacity(0.15),
+                                                color: const Color(0xFF00F0FF).withValues(alpha: 0.15),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               child: Text(tag, style: const TextStyle(color: Color(0xFF00F0FF), fontSize: 11)),

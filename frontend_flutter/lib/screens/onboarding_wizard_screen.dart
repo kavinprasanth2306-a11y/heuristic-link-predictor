@@ -15,13 +15,13 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
   bool _isSubmitting = false;
 
   // Google User Info Mock
-  String _name = "Kavin Prasanth";
-  String _email = "darkin2306@gmail.com";
+  final String _name = "Kavin Prasanth";
+  final String _email = "darkin2306@gmail.com";
   String _selectedAvatar = "";
-  int _age = 21;
-  String _gender = "Male";
-  String _bio = "AI student & developer passionate about Graph Neural Networks, hackathons, and indie coffee spots.";
-  String _city = "Bengaluru, India (12.9716° N, 77.5946° E)";
+  final int _age = 21;
+  final String _gender = "Male";
+  final String _bio = "AI student & developer passionate about Graph Neural Networks, hackathons, and indie coffee spots.";
+  final String _city = "Bengaluru, India (12.9716° N, 77.5946° E)";
 
   // 10-D Vector answers
   final List<double> _vector10d = List.filled(10, -1.0);
