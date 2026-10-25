@@ -23,7 +23,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
 
   Future<void> _loadFeed() async {
     setState(() => _isLoading = true);
-    final feed = await ApiService.getFeed(userId: 'p1');
+    final feed = await ApiService.getFeed();
     setState(() {
       _candidates = feed;
       _currentIndex = 0;
@@ -43,7 +43,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
     });
 
     final res = await ApiService.swipe(
-      likerId: 'p1',
+      likerId: ApiService.activeUserId,
       targetId: currentProfile.id,
       action: action,
     );
@@ -300,37 +300,49 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
     }
 
     if (_currentIndex >= _candidates.length) {
+      final hasError = ApiService.lastError != null;
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.favorite_border, size: 64, color: Colors.white38),
-            const SizedBox(height: 16),
-            const Text(
-              "No more profiles right now!",
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Check back later or reset the demo dataset.",
-              style: TextStyle(color: Colors.white54, fontSize: 12),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4458),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                hasError ? Icons.wifi_off : Icons.favorite_border,
+                size: 64,
+                color: hasError ? const Color(0xFFFF4458) : Colors.white38,
               ),
-              onPressed: () async {
-                await ApiService.resetSession();
-                _loadFeed();
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text("Reset CupidGraph Deck"),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                hasError ? "Backend Connection Failed" : "No more profiles right now!",
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                hasError
+                    ? "Phone cannot connect to Flask API at ${ApiService.baseUrl}.\nMake sure 'python app.py' is running on your PC and both devices are on the same Wi-Fi."
+                    : "Check back later or reset the demo dataset.",
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white54, fontSize: 12, height: 1.4),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF4458),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                onPressed: () async {
+                  await ApiService.resetSession();
+                  _loadFeed();
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text("Retry Connection"),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -354,14 +366,17 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                       children: [
                         CircleAvatar(
                           radius: 18,
-                          backgroundImage: const NetworkImage('https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600'),
+                          backgroundImage: NetworkImage(ApiService.activeUserAvatar),
                           backgroundColor: Colors.grey.shade900,
                         ),
                         const SizedBox(width: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text("Aarav Sharma (You)", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text(
+                              "${ApiService.activeUserName} (You)",
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
                             Text("${_candidates.length - _currentIndex} profiles remaining", style: const TextStyle(color: Colors.white38, fontSize: 10)),
                           ],
                         ),

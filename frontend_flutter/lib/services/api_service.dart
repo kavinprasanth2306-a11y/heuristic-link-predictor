@@ -3,6 +3,11 @@ import 'package:http/http.dart' as http;
 import '../models/dating_profile.dart';
 
 class ApiService {
+  // Current active user ID
+  static String activeUserId = 'p1';
+  static String activeUserName = 'Aarav Sharma';
+  static String activeUserAvatar = 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600';
+
   // Primary IP from your Wi-Fi interface (for physical Android phone & local network)
   // Also supports 10.0.2.2 (Android Emulator) and 127.0.0.1 (Web / Windows)
   static const String lanHost = '192.168.1.40';
@@ -10,6 +15,7 @@ class ApiService {
 
   // Primary URL using your machine's Wi-Fi LAN IP
   static String baseUrl = 'http://$lanHost:$port/api';
+  static String? lastError;
 
   // Candidate base URLs to query in fallback order
   static final List<String> candidateUrls = [
@@ -48,38 +54,50 @@ class ApiService {
           'vector_10d': vector10d,
         },
       );
-      return json.decode(response.body);
+      final data = json.decode(response.body);
+      if (data['status'] == 'success' && data['user'] != null) {
+        activeUserId = data['user']['id'] ?? 'p1';
+        activeUserName = data['user']['name'] ?? name;
+        activeUserAvatar = data['user']['avatar'] ?? avatar;
+      }
+      return data;
     } catch (e) {
+      lastError = e.toString();
       return {'status': 'error', 'message': e.toString()};
     }
   }
 
   // Fetch candidate swipe feed for active user
-  static Future<List<DatingProfile>> getFeed({String userId = 'p1'}) async {
+  static Future<List<DatingProfile>> getFeed({String? userId}) async {
+    final uid = userId ?? activeUserId;
     try {
-      final response = await _getWithFallback('/feed?user_id=$userId');
+      final response = await _getWithFallback('/feed?user_id=$uid');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List candidatesJson = data['candidates'] ?? [];
+        lastError = null;
         return candidatesJson.map((c) => DatingProfile.fromJson(c)).toList();
       }
+      lastError = 'HTTP ${response.statusCode}: ${response.body}';
       return [];
     } catch (e) {
+      lastError = e.toString();
       return [];
     }
   }
 
   // Swipe action (like or pass or superlike)
   static Future<Map<String, dynamic>> swipe({
-    String likerId = 'p1',
+    String? likerId,
     required String targetId,
     required String action, // 'like', 'pass', 'superlike'
   }) async {
+    final uid = likerId ?? activeUserId;
     try {
       final response = await _postWithFallback(
         '/swipe',
         {
-          'liker_id': likerId,
+          'liker_id': uid,
           'target_id': targetId,
           'action': action,
         },
@@ -89,6 +107,7 @@ class ApiService {
       }
       return {'status': 'error'};
     } catch (e) {
+      lastError = e.toString();
       return {'status': 'error', 'message': e.toString()};
     }
   }
@@ -96,7 +115,7 @@ class ApiService {
   // Fetch Minimum Spanning Tree (MST)
   static Future<MstResult?> getMst({String algo = 'kruskal'}) async {
     try {
-      final response = await _getWithFallback('/mst?algo=$algo');
+      final response = await _getWithFallback('/mst?algo=$algo&start_node=$activeUserId');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return MstResult.fromJson(data['result']);
@@ -148,14 +167,15 @@ class ApiService {
   static Future<http.Response> _getWithFallback(String path) async {
     // Try current baseUrl first
     try {
-      return await http.get(Uri.parse('$baseUrl$path')).timeout(const Duration(seconds: 3));
+      final res = await http.get(Uri.parse('$baseUrl$path')).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) return res;
     } catch (_) {}
 
     // Fall back through candidate IP addresses
     for (final host in candidateUrls) {
       if (host == baseUrl) continue;
       try {
-        final res = await http.get(Uri.parse('$host$path')).timeout(const Duration(seconds: 3));
+        final res = await http.get(Uri.parse('$host$path')).timeout(const Duration(seconds: 4));
         if (res.statusCode == 200) {
           baseUrl = host; // Pin working host
           return res;
@@ -163,7 +183,7 @@ class ApiService {
       } catch (_) {}
     }
 
-    throw Exception('Failed to connect to backend on any candidate IP.');
+    throw Exception('Cannot reach CupidGraph backend at $baseUrl. Check if python app.py is running on port 5000 and phone is on same Wi-Fi.');
   }
 
   static Future<http.Response> _postWithFallback(String path, Map<String, dynamic> body) async {
@@ -171,11 +191,12 @@ class ApiService {
     final encodedBody = json.encode(body);
 
     try {
-      return await http.post(
+      final res = await http.post(
         Uri.parse('$baseUrl$path'),
         headers: headers,
         body: encodedBody,
-      ).timeout(const Duration(seconds: 3));
+      ).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200 || res.statusCode == 201) return res;
     } catch (_) {}
 
     for (final host in candidateUrls) {
@@ -185,7 +206,7 @@ class ApiService {
           Uri.parse('$host$path'),
           headers: headers,
           body: encodedBody,
-        ).timeout(const Duration(seconds: 3));
+        ).timeout(const Duration(seconds: 4));
         if (res.statusCode == 200 || res.statusCode == 201) {
           baseUrl = host;
           return res;
@@ -193,6 +214,6 @@ class ApiService {
       } catch (_) {}
     }
 
-    throw Exception('Failed to post to backend on any candidate IP.');
+    throw Exception('Cannot reach CupidGraph backend at $baseUrl. Check if python app.py is running on port 5000.');
   }
 }
