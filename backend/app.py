@@ -295,6 +295,56 @@ def reset_session():
     DATASTORE = get_dating_dataset()
     return jsonify({"status": "success", "message": "CupidGraph session reset successfully"})
 
+# =====================================================================
+# 6. IN-APP OVER-THE-AIR (OTA) AUTO-UPDATE ENDPOINTS
+# =====================================================================
+APK_DIR = os.path.join(os.path.dirname(__file__), 'static', 'apk')
+os.makedirs(APK_DIR, exist_ok=True)
+
+APP_RELEASE_INFO = {
+    "version": "1.0.1",
+    "version_code": 2,
+    "release_notes": "CupidGraph v1.0.1: Added in-app OTA updates, smooth Tinder swipe gestures, and real-time compatibility graphs!",
+    "download_url": "/api/app/download",
+    "min_supported_version": 1
+}
+
+@app.route('/api/app/version', methods=['GET'])
+def get_latest_app_version():
+    apk_file = "cupidgraph-latest.apk"
+    apk_path = os.path.join(APK_DIR, apk_file)
+    has_apk = os.path.exists(apk_path)
+    file_size_bytes = os.path.getsize(apk_path) if has_apk else 0
+
+    return jsonify({
+        "status": "success",
+        "has_update": True,
+        "latest_version": APP_RELEASE_INFO["version"],
+        "latest_version_code": APP_RELEASE_INFO["version_code"],
+        "release_notes": APP_RELEASE_INFO["release_notes"],
+        "download_url": APP_RELEASE_INFO["download_url"],
+        "file_size_bytes": file_size_bytes,
+        "is_apk_available": has_apk
+    })
+
+@app.route('/api/app/download', methods=['GET'])
+def download_latest_apk():
+    apk_file = "cupidgraph-latest.apk"
+    apk_path = os.path.join(APK_DIR, apk_file)
+    if not os.path.exists(apk_path):
+        return jsonify({
+            "status": "error",
+            "message": "No APK build found on server. Please build and place cupidgraph-latest.apk in backend/static/apk/"
+        }), 404
+        
+    return send_from_directory(
+        APK_DIR, 
+        apk_file, 
+        as_attachment=True,
+        download_name="cupidgraph-latest.apk",
+        mimetype="application/vnd.android.package-archive"
+    )
+
 if __name__ == '__main__':
     print("=" * 70)
     print("CupidGraph: Graph-Theoretic Compatibility & Matchmaking Engine")
