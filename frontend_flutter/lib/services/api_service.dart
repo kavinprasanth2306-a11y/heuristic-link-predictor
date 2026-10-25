@@ -3,11 +3,22 @@ import 'package:http/http.dart' as http;
 import '../models/dating_profile.dart';
 
 class ApiService {
-  // Use 10.0.2.2 for Android Emulator, 127.0.0.1 for Desktop/Web/Local testing
-  // In flutter android run, 10.0.2.2 connects directly to host localhost:5000
-  static String baseUrl = 'http://10.0.2.2:5000/api';
+  // Primary IP from your Wi-Fi interface (for physical Android phone & local network)
+  // Also supports 10.0.2.2 (Android Emulator) and 127.0.0.1 (Web / Windows)
+  static const String lanHost = '192.168.1.40';
+  static const int port = 5000;
 
-  // Fallback to localhost if running on non-android or local unit tests
+  // Primary URL using your machine's Wi-Fi LAN IP
+  static String baseUrl = 'http://$lanHost:$port/api';
+
+  // Candidate base URLs to query in fallback order
+  static final List<String> candidateUrls = [
+    'http://192.168.1.40:5000/api',  // Physical Android device over Wi-Fi
+    'http://10.0.2.2:5000/api',      // Android Emulator host loopback
+    'http://127.0.0.1:5000/api',     // Web & Desktop localhost
+    'http://localhost:5000/api',     // Standard localhost
+  ];
+
   static void setCustomBaseUrl(String url) {
     baseUrl = url;
   }
@@ -133,31 +144,55 @@ class ApiService {
     }
   }
 
-  // Robust network fallback (checks 10.0.2.2 for Android emulator and 127.0.0.1 for desktop/web)
+  // Multi-target fallback network handler
   static Future<http.Response> _getWithFallback(String path) async {
+    // Try current baseUrl first
     try {
-      return await http.get(Uri.parse('$baseUrl$path')).timeout(const Duration(seconds: 4));
-    } catch (_) {
-      final altUrl = baseUrl.contains('10.0.2.2') ? 'http://127.0.0.1:5000/api' : 'http://10.0.2.2:5000/api';
-      return await http.get(Uri.parse('$altUrl$path'));
+      return await http.get(Uri.parse('$baseUrl$path')).timeout(const Duration(seconds: 3));
+    } catch (_) {}
+
+    // Fall back through candidate IP addresses
+    for (final host in candidateUrls) {
+      if (host == baseUrl) continue;
+      try {
+        final res = await http.get(Uri.parse('$host$path')).timeout(const Duration(seconds: 3));
+        if (res.statusCode == 200) {
+          baseUrl = host; // Pin working host
+          return res;
+        }
+      } catch (_) {}
     }
+
+    throw Exception('Failed to connect to backend on any candidate IP.');
   }
 
   static Future<http.Response> _postWithFallback(String path, Map<String, dynamic> body) async {
     final headers = {'Content-Type': 'application/json'};
+    final encodedBody = json.encode(body);
+
     try {
       return await http.post(
         Uri.parse('$baseUrl$path'),
         headers: headers,
-        body: json.encode(body),
-      ).timeout(const Duration(seconds: 4));
-    } catch (_) {
-      final altUrl = baseUrl.contains('10.0.2.2') ? 'http://127.0.0.1:5000/api' : 'http://10.0.2.2:5000/api';
-      return await http.post(
-        Uri.parse('$altUrl$path'),
-        headers: headers,
-        body: json.encode(body),
-      );
+        body: encodedBody,
+      ).timeout(const Duration(seconds: 3));
+    } catch (_) {}
+
+    for (final host in candidateUrls) {
+      if (host == baseUrl) continue;
+      try {
+        final res = await http.post(
+          Uri.parse('$host$path'),
+          headers: headers,
+          body: encodedBody,
+        ).timeout(const Duration(seconds: 3));
+        if (res.statusCode == 200 || res.statusCode == 201) {
+          baseUrl = host;
+          return res;
+        }
+      } catch (_) {}
     }
+
+    throw Exception('Failed to post to backend on any candidate IP.');
   }
 }
