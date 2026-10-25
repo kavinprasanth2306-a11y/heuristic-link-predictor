@@ -3,28 +3,13 @@ CupidGraph Algorithmic Engine
 Course: 25CS301 - Artificial Intelligence
 Integrated COs: CO2 (Graph Algorithms & Search), CO3 (Knowledge Representation), CO5 (AI Applications)
 
-From-scratch implementations:
-1. Minimum Spanning Tree (MST):
-   - Kruskal's Algorithm with Disjoint Set Union (DSU with union by rank and path compression)
-   - Prim's Algorithm with Binary Min-Heap Priority Queue
-   - Cost Metric: Dissimilarity / Friction = 1.0 - Compatibility_Score (or round(10.0 / score, 3))
-   - Use Case: Social Cohort / Group Dating Optimization to connect individuals with minimal friction.
-
-2. Topological Sorting (Relationship Readiness & Milestone Progression):
-   - Kahn's Algorithm (BFS In-degree)
-   - Cycle detection and feedback resolution
-   - Progression tiers: Icebreaker -> Lifestyle Compatibility -> Core Values -> Long-Term Commitment
-
-3. Hybrid AI Compatibility & Link Prediction Engine (CO3, CO5):
-   - Multi-hot vector Cosine Similarity over lifestyle traits and interests
-   - Adamic-Adar Index over mutual social circles
-   - Jaccard Similarity on mutual friends
-   - Weighted Hybrid Match Score (0 - 100%)
-   - Explainable AI (XAI) reason badges
-
-4. A* Social Introduction Path Finder (CO2):
-   - Shortest trusted route between two users
-   - f(n) = g(n) + h(n), where g(n) is social distance resistance, h(n) is profile cosine dissimilarity
+Features:
+1. True 10-Dimensional Vector Cosine Similarity (CO5)
+2. Adamic-Adar Degree-Penalized Link Prediction Index (CO3)
+3. Jaccard Similarity on Mutual Connections
+4. Kruskal's & Prim's Minimum Spanning Tree (MST) on Relationship Friction (CO2)
+5. Kahn's Topological Sort with Cycle Detection on Readiness DAG (CO2, CO3)
+6. A* Heuristic Shortest Trusted Introduction Path (CO2)
 """
 
 import math
@@ -37,9 +22,6 @@ import numpy as np
 # 1. DISJOINT SET UNION (DSU) FOR KRUSKAL'S MST
 # =====================================================================
 class DisjointSetUnion:
-    """Disjoint Set Union (DSU) with Path Compression and Union by Rank.
-    Time Complexity: O(alpha(V)) ~ O(1) amortized.
-    """
     def __init__(self, elements):
         self.parent = {elem: elem for elem in elements}
         self.rank = {elem: 0 for elem in elements}
@@ -61,40 +43,29 @@ class DisjointSetUnion:
 
 
 # =====================================================================
-# 2. HYBRID COMPATIBILITY & LINK PREDICTION (CO3, CO5)
+# 2. REAL 10-D VECTOR COSINE SIMILARITY & HYBRID AI SCORING (CO5)
 # =====================================================================
-def compute_profile_cosine_similarity(profile_u, profile_v, vocabulary=None):
+def compute_vector_10d_cosine_similarity(vec_a, vec_b):
     """
-    Computes Cosine Similarity between two user profile vectors
-    based on multi-hot encoded lifestyle traits and interests.
-    Cosine Similarity = (A . B) / (||A|| * ||B||)
+    Computes true Cosine Similarity between two normalized 10-D preference vectors:
+    Cosine Sim = (A . B) / (||A|| * ||B||)
     """
-    if vocabulary is None:
-        vocabulary = list(set(
-            profile_u.get("lifestyle_traits", []) + profile_u.get("interests", []) +
-            profile_v.get("lifestyle_traits", []) + profile_v.get("interests", [])
-        ))
+    if not vec_a or not vec_b or len(vec_a) != len(vec_b):
+        return 0.5
 
-    if not vocabulary:
+    dot_product = sum(a * b for a, b in zip(vec_a, vec_b))
+    norm_a = math.sqrt(sum(a * a for a in vec_a))
+    norm_b = math.sqrt(sum(b * b for b in vec_b))
+
+    if norm_a == 0 or norm_b == 0:
         return 0.0
-
-    vec_u = [1 if (t in profile_u.get("lifestyle_traits", []) or t in profile_u.get("interests", [])) else 0 for t in vocabulary]
-    vec_v = [1 if (t in profile_v.get("lifestyle_traits", []) or t in profile_v.get("interests", [])) else 0 for t in vocabulary]
-
-    dot_product = sum(u * v for u, v in zip(vec_u, vec_v))
-    norm_u = math.sqrt(sum(u * u for u in vec_u))
-    norm_v = math.sqrt(sum(v * v for v in vec_v))
-
-    if norm_u == 0 or norm_v == 0:
-        return 0.0
-    return round(dot_product / (norm_u * norm_v), 4)
+    return round(dot_product / (norm_a * norm_b), 4)
 
 
 def compute_adamic_adar_index(u_id, v_id, mutual_dict):
     """
     Adamic-Adar Index on mutual social connections:
     Sum of 1 / log(degree(z)) for all mutual friends z.
-    Shared acquaintances with small degrees represent tighter, higher-intimacy bonds.
     """
     friends_u = set(mutual_dict.get(u_id, []))
     friends_v = set(mutual_dict.get(v_id, []))
@@ -111,7 +82,6 @@ def compute_adamic_adar_index(u_id, v_id, mutual_dict):
 
 
 def compute_jaccard_similarity(u_id, v_id, mutual_dict):
-    """Jaccard coefficient on mutual social network: |N(u) n N(v)| / |N(u) U N(v)|"""
     friends_u = set(mutual_dict.get(u_id, []))
     friends_v = set(mutual_dict.get(v_id, []))
     intersection_len = len(friends_u.intersection(friends_v))
@@ -121,56 +91,50 @@ def compute_jaccard_similarity(u_id, v_id, mutual_dict):
     return round(intersection_len / union_len, 4)
 
 
-def calculate_match_score(profile_u, profile_v, mutual_dict, all_vocabulary=None):
+def calculate_match_score(profile_u, profile_v, mutual_dict):
     """
     Computes calibrated Hybrid Compatibility Match Score (0 to 100%)
-    Score = w1 * Cosine + w2 * AdamicAdar_Norm + w3 * Jaccard + w4 * ReadinessAlignment
+    Score = w1 * 10D_Cosine + w2 * AdamicAdar_Norm + w3 * Jaccard + w4 * ReadinessAlignment
     """
     u_id, v_id = profile_u["id"], profile_v["id"]
     
-    # 1. Trait & Interest Cosine Similarity
-    cosine_sim = compute_profile_cosine_similarity(profile_u, profile_v, all_vocabulary)
+    # 1. Real 10-D Vector Cosine Similarity
+    vec_u = profile_u.get("vector_10d", [0.5] * 10)
+    vec_v = profile_v.get("vector_10d", [0.5] * 10)
+    cosine_sim = compute_vector_10d_cosine_similarity(vec_u, vec_v)
     
-    # 2. Social Graph Adamic-Adar & Jaccard
+    # 2. Social Topology (Adamic-Adar + Jaccard)
     aa_score, mutual_friends = compute_adamic_adar_index(u_id, v_id, mutual_dict)
     jaccard_sim = compute_jaccard_similarity(u_id, v_id, mutual_dict)
-    
-    # Normalize Adamic-Adar to [0, 1] range (typical threshold ~ 2.0)
     aa_norm = min(aa_score / 2.0, 1.0)
 
     # 3. Relationship Readiness Alignment bonus
-    stage_u = profile_u.get("readiness_stage", "Icebreaker")
-    stage_v = profile_v.get("readiness_stage", "Icebreaker")
+    stage_u = profile_u.get("readiness_stage", "Icebreaker / Quiz")
+    stage_v = profile_v.get("readiness_stage", "Icebreaker / Quiz")
     readiness_bonus = 1.0 if stage_u == stage_v else 0.6
 
     # Weighted Hybrid Formula
-    # 45% Lifestyle/Interests Cosine, 25% Adamic-Adar mutual circle, 15% Jaccard, 15% Readiness Stage
     raw_score = (
-        0.45 * cosine_sim +
+        0.50 * cosine_sim +
         0.25 * aa_norm +
-        0.15 * jaccard_sim +
+        0.10 * jaccard_sim +
         0.15 * readiness_bonus
     ) * 100.0
 
-    score = round(min(max(raw_score, 40.0), 98.5), 1)
+    score = round(min(max(raw_score, 45.0), 98.8), 1)
 
-    # Shared tags for Explainable AI (XAI)
+    # Explainable AI (XAI) Badges
     shared_traits = list(set(profile_u.get("lifestyle_traits", [])).intersection(set(profile_v.get("lifestyle_traits", []))))
     shared_interests = list(set(profile_u.get("interests", [])).intersection(set(profile_v.get("interests", []))))
 
-    # Reason Badges
     badges = []
+    badges.append(f"{int(cosine_sim * 100)}% 10-D Value Match")
     if len(mutual_friends) > 0:
-        badges.append(f"{len(mutual_friends)} Mutual Friend{'s' if len(mutual_friends) > 1 else ''}")
+        badges.append(f"{len(mutual_friends)} Mutual Social Bridge{'s' if len(mutual_friends) > 1 else ''}")
     if shared_interests:
-        badges.append(f"Shared: {', '.join(shared_interests[:2])}")
-    if shared_traits:
-        badges.append(f"Lifestyle: {', '.join(shared_traits[:2])}")
+        badges.append(f"Shared: {shared_interests[0]}")
     if stage_u == stage_v:
-        badges.append(f"Aligned Stage: {stage_u}")
-
-    if not badges:
-        badges.append("High Emerging Chemistry")
+        badges.append(f"Stage: {stage_u}")
 
     return {
         "match_score": score,
@@ -193,9 +157,6 @@ def a_star_social_intro_path(start_id, target_id, profiles_dict, mutual_dict):
     """
     A* Heuristic Search for Shortest Trusted Mutual Introduction Route:
     f(n) = g(n) + h(n)
-    where:
-      g(n) = Cumulative social relationship friction along chain
-      h(n) = Admissible heuristic = (1.0 - CosineSimilarity(n, target)) * 2.0
     """
     if start_id == target_id:
         return [start_id], 0.0
@@ -204,11 +165,13 @@ def a_star_social_intro_path(start_id, target_id, profiles_dict, mutual_dict):
     if not target_profile:
         return [], float('inf')
 
+    target_vec = target_profile.get("vector_10d", [0.5] * 10)
+
     def heuristic(node_id):
         curr_p = profiles_dict.get(node_id)
         if not curr_p:
             return 1.0
-        sim = compute_profile_cosine_similarity(curr_p, target_profile)
+        sim = compute_vector_10d_cosine_similarity(curr_p.get("vector_10d", []), target_vec)
         return round((1.0 - sim) * 2.0, 3)
 
     pq = [(heuristic(start_id), 0.0, start_id, [start_id])]
@@ -229,7 +192,6 @@ def a_star_social_intro_path(start_id, target_id, profiles_dict, mutual_dict):
             if neighbor not in profiles_dict:
                 continue
 
-            # Friction edge weight based on mutual match
             match_res = calculate_match_score(profiles_dict[current], profiles_dict[neighbor], mutual_dict)
             edge_friction = match_res["dissimilarity_cost"] + 0.2
 
@@ -247,23 +209,13 @@ def a_star_social_intro_path(start_id, target_id, profiles_dict, mutual_dict):
 # 4. MINIMUM SPANNING TREE (MST) — GROUP MATCHING BACKBONE (CO2)
 # =====================================================================
 def run_kruskals_mst(nodes, edges_with_costs):
-    """
-    Kruskal's Algorithm for Minimum Spanning Tree (MST).
-    Minimizes total dissimilarity friction to extract the optimal community backbone.
-    
-    Time Complexity: O(E log E) or O(E log V)
-    Space Complexity: O(V + E)
-    """
     start_time = time.perf_counter()
     steps = []
-
-    # Sort edges primarily by non-decreasing cost
     sorted_edges = sorted(edges_with_costs, key=lambda x: x["cost"])
     dsu = DisjointSetUnion(nodes)
 
     mst_edges = []
     total_cost = 0.0
-    discarded_edges = []
 
     for edge in sorted_edges:
         u, v, cost = edge["source"], edge["target"], edge["cost"]
@@ -279,17 +231,15 @@ def run_kruskals_mst(nodes, edges_with_costs):
                 "action": "ADDED",
                 "edge": f"{u} — {v}",
                 "cost": cost,
-                "affinity_score": edge.get("score", round((1.0 - cost) * 100, 1)),
-                "reason": f"Unified clusters {root_u} and {root_v} with minimal dissimilarity"
+                "reason": f"Unified clusters with minimal dissimilarity"
             })
         else:
-            discarded_edges.append(edge)
             steps.append({
                 "step": len(steps) + 1,
                 "action": "REJECTED",
                 "edge": f"{u} — {v}",
                 "cost": cost,
-                "reason": "Redundant connection; cluster already spanned"
+                "reason": "Redundant connection; cycle pruned"
             })
 
     elapsed_ms = round((time.perf_counter() - start_time) * 1000, 3)
@@ -311,13 +261,6 @@ def run_kruskals_mst(nodes, edges_with_costs):
 
 
 def run_prims_mst(nodes, edges_with_costs, start_node=None):
-    """
-    Prim's Algorithm for Minimum Spanning Tree with Binary Min-Heap Priority Queue.
-    Grows connected match backbone from an initial seed profile.
-    
-    Time Complexity: O(E log V)
-    Space Complexity: O(V + E)
-    """
     start_time = time.perf_counter()
     if not nodes:
         return {"algorithm": "Prim's MST", "mst_edges": [], "total_cost": 0, "execution_time_ms": 0}
@@ -395,14 +338,6 @@ def run_prims_mst(nodes, edges_with_costs, start_node=None):
 # 5. TOPOLOGICAL SORTING (RELATIONSHIP MILESTONES & DAG) (CO2, CO3)
 # =====================================================================
 def run_kahns_readiness_sort(nodes, directed_milestone_edges):
-    """
-    Kahn's Algorithm (BFS In-degree) on Relationship Milestone DAG.
-    Validates prerequisite ordering:
-    Icebreaker -> Lifestyle Compatibility -> Core Values -> Long-Term Commitment
-    
-    Time Complexity: O(V + E)
-    Space Complexity: O(V + E)
-    """
     start_time = time.perf_counter()
     adj = {n: [] for n in nodes}
     in_degree = {n: 0 for n in nodes}

@@ -1,11 +1,23 @@
 """
 CupidGraph Realistic Dating & Compatibility Dataset
-30 Curated Student & Young Professional Dating Profiles
+30 Curated Student & Young Professional Dating Profiles with True 10-D Orthogonal Feature Vectors
 Attributes: id, name, age, gender, interested_in, bio, lifestyle_traits, interests,
-mutual_connections, readiness_stage, location, avatar
+vector_10d, mutual_connections, readiness_stage, location, avatar
 """
 
 import copy
+
+# 10 Dimensions in the vector:
+# [0] Weekend Vibe (0.0 to 1.0)
+# [1] Social Battery (0.0=Deep Introvert, 1.0=Extreme Extrovert)
+# [2] Relationship Goal (0.0=Casual, 1.0=Long-term)
+# [3] Communication Style (0.0=Async/Memes, 1.0=Instant/Calls)
+# [4] Sleep Schedule (0.0=Early Bird, 1.0=Night Owl)
+# [5] Fitness Activity (0.0=Couch, 1.0=Daily Athletics)
+# [6] Travel Mindset (0.0=Staycation, 1.0=Spontaneous Backpacker)
+# [7] Curiosity Spark (0.0=Pop Culture, 1.0=Tech/Philosophy)
+# [8] Conflict Resolution (0.0=Space/Cool-off, 1.0=Immediate Talk)
+# [9] Pet Affinity (0.0=Neither, 1.0=Dog/Cat Lover)
 
 INITIAL_PROFILES = [
     {
@@ -17,8 +29,9 @@ INITIAL_PROFILES = [
         "bio": "AI Researcher & coffee enthusiast. Looking for someone who gets excited about deep conversations, late-night hackathons, and weekend treks.",
         "lifestyle_traits": ["Introvert", "Night-Owl", "Gym", "Career-Driven", "Non-Smoker"],
         "interests": ["AI & Robotics", "Indie Music", "Filter Coffee", "Trekking", "Sci-Fi Movies"],
+        "vector_10d": [0.8, 0.3, 0.9, 0.7, 0.9, 0.8, 0.8, 1.0, 0.7, 0.9],
         "mutual_connections": ["p2", "p3", "p5", "p8", "p12"],
-        "readiness_stage": "Core Values",  # Icebreaker -> Lifestyle -> Core Values -> Long-Term
+        "readiness_stage": "Core Values",
         "location": "Koramangala, Bengaluru",
         "avatar": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=600&q=80"
     },
@@ -31,6 +44,7 @@ INITIAL_PROFILES = [
         "bio": "Data Scientist by day, indie guitarist by night. Passionate about art galleries, vinyl records, and cute dogs.",
         "lifestyle_traits": ["Ambivert", "Night-Owl", "Creative", "Bookworm", "Vegetarian"],
         "interests": ["Indie Music", "Filter Coffee", "AI & Robotics", "Art Galleries", "Guitar"],
+        "vector_10d": [0.8, 0.5, 0.85, 0.75, 0.85, 0.6, 0.75, 0.95, 0.8, 1.0],
         "mutual_connections": ["p1", "p3", "p4", "p7", "p15"],
         "readiness_stage": "Core Values",
         "location": "Indiranagar, Bengaluru",
@@ -45,6 +59,7 @@ INITIAL_PROFILES = [
         "bio": "Full-stack engineer & weekend cyclist. Let's debate whether tabs or spaces win, or just find the best street tacos in town.",
         "lifestyle_traits": ["Extrovert", "Early-Bird", "Gym", "Foodie", "Social-Drinker"],
         "interests": ["Cycling", "Street Food", "Indie Music", "Startups", "Board Games"],
+        "vector_10d": [0.6, 0.9, 0.6, 0.8, 0.2, 0.9, 0.8, 0.85, 0.85, 0.7],
         "mutual_connections": ["p1", "p2", "p4", "p6", "p9"],
         "readiness_stage": "Lifestyle Compatibility",
         "location": "HSR Layout, Bengaluru",
@@ -59,6 +74,7 @@ INITIAL_PROFILES = [
         "bio": "Cybersecurity auditor & marathon runner. I value genuine honesty, thrift store finds, and authentic street food crawls.",
         "lifestyle_traits": ["Ambivert", "Early-Bird", "Gym", "Health-Conscious", "Organized"],
         "interests": ["Marathon", "Street Food", "Cycling", "Cyber Defense", "Podcasts"],
+        "vector_10d": [0.65, 0.6, 0.8, 0.7, 0.15, 0.95, 0.7, 0.8, 0.9, 0.8],
         "mutual_connections": ["p2", "p3", "p6", "p10", "p16"],
         "readiness_stage": "Lifestyle Compatibility",
         "location": "Whitefield, Bengaluru",
@@ -73,6 +89,7 @@ INITIAL_PROFILES = [
         "bio": "NLP Engineer & literature lover. Seeking an intellectual partner for bookstore dates, jazz cafes, and thought-provoking debates.",
         "lifestyle_traits": ["Introvert", "Night-Owl", "Bookworm", "Mindful", "Non-Smoker"],
         "interests": ["Literature", "AI & Robotics", "Filter Coffee", "Jazz Music", "Photography"],
+        "vector_10d": [0.4, 0.25, 0.95, 0.6, 0.9, 0.4, 0.6, 0.95, 0.7, 0.6],
         "mutual_connections": ["p1", "p6", "p8", "p11", "p17"],
         "readiness_stage": "Long-Term Commitment",
         "location": "Jayanagar, Bengaluru",
@@ -87,6 +104,7 @@ INITIAL_PROFILES = [
         "bio": "Senior Cloud Architect & Angel Investor. Looking for a high-chemistry, ambitious partner to build a meaningful life together.",
         "lifestyle_traits": ["Extrovert", "Early-Bird", "Gym", "Career-Driven", "Wine-Lover"],
         "interests": ["Startups", "Literature", "Fine Dining", "Marathon", "Jazz Music"],
+        "vector_10d": [0.7, 0.85, 0.95, 0.75, 0.2, 0.85, 0.9, 0.9, 0.8, 0.5],
         "mutual_connections": ["p3", "p4", "p5", "p9", "p13"],
         "readiness_stage": "Long-Term Commitment",
         "location": "Lavelle Road, Bengaluru",
@@ -101,6 +119,7 @@ INITIAL_PROFILES = [
         "bio": "Robotics student & anime binge-watcher. Teach me your favorite board game or show me your favorite stargazing spot.",
         "lifestyle_traits": ["Ambivert", "Night-Owl", "Creative", "Gamer", "Pet-Lover"],
         "interests": ["Anime", "Board Games", "Robotics", "Stargazing", "Indie Music"],
+        "vector_10d": [0.85, 0.55, 0.5, 0.8, 0.95, 0.45, 0.7, 0.85, 0.65, 0.95],
         "mutual_connections": ["p2", "p8", "p10", "p14", "p18"],
         "readiness_stage": "Icebreaker",
         "location": "Koramangala, Bengaluru",
@@ -115,6 +134,7 @@ INITIAL_PROFILES = [
         "bio": "Competitive programmer & anime fan. Looking for cozy vibes, spontaneous movie nights, and someone to laugh at bad math jokes with.",
         "lifestyle_traits": ["Introvert", "Night-Owl", "Gamer", "Analytical", "Non-Smoker"],
         "interests": ["Anime", "Board Games", "Algorithms", "Sci-Fi Movies", "Stargazing"],
+        "vector_10d": [0.85, 0.25, 0.6, 0.65, 0.95, 0.4, 0.6, 0.9, 0.6, 0.7],
         "mutual_connections": ["p1", "p5", "p7", "p11", "p19"],
         "readiness_stage": "Icebreaker",
         "location": "BTM Layout, Bengaluru",
@@ -129,6 +149,7 @@ INITIAL_PROFILES = [
         "bio": "UI/UX Designer & ceramics hobbyist. I fall for good typography, aesthetic cafe corners, and deep soulful playlists.",
         "lifestyle_traits": ["Extrovert", "Night-Owl", "Creative", "Social-Drinker", "Foodie"],
         "interests": ["UI Design", "Filter Coffee", "Indie Music", "Art Galleries", "Ceramics"],
+        "vector_10d": [0.75, 0.8, 0.7, 0.85, 0.8, 0.5, 0.8, 0.75, 0.75, 0.85],
         "mutual_connections": ["p3", "p6", "p10", "p12", "p20"],
         "readiness_stage": "Lifestyle Compatibility",
         "location": "Indiranagar, Bengaluru",
@@ -143,6 +164,7 @@ INITIAL_PROFILES = [
         "bio": "Backend wizard & amateur chef. If you love fresh sourdough, Italian pasta, and indie gigs, we are going to get along great.",
         "lifestyle_traits": ["Ambivert", "Night-Owl", "Foodie", "Creative", "Spontaneous"],
         "interests": ["Cooking", "Indie Music", "Filter Coffee", "Ceramics", "Street Food"],
+        "vector_10d": [0.7, 0.6, 0.75, 0.7, 0.8, 0.65, 0.75, 0.7, 0.8, 0.9],
         "mutual_connections": ["p4", "p7", "p9", "p13", "p21"],
         "readiness_stage": "Lifestyle Compatibility",
         "location": "HSR Layout, Bengaluru",
@@ -157,6 +179,7 @@ INITIAL_PROFILES = [
         "bio": "Machine Learning engineer & classical dancer. Looking for emotional maturity, reciprocal effort, and genuine compatibility.",
         "lifestyle_traits": ["Introvert", "Early-Bird", "Disciplined", "Mindful", "Vegetarian"],
         "interests": ["Classical Dance", "AI & Robotics", "Filter Coffee", "Yoga", "Literature"],
+        "vector_10d": [0.5, 0.35, 0.9, 0.6, 0.2, 0.75, 0.6, 0.9, 0.85, 0.75],
         "mutual_connections": ["p1", "p5", "p8", "p12", "p22"],
         "readiness_stage": "Core Values",
         "location": "Malleswaram, Bengaluru",
@@ -171,6 +194,7 @@ INITIAL_PROFILES = [
         "bio": "Computer Vision specialist & travel photographer. Let's explore scenic misty viewpoints and discover hidden local dessert spots.",
         "lifestyle_traits": ["Ambivert", "Early-Bird", "Adventurous", "Gym", "Non-Smoker"],
         "interests": ["Photography", "Trekking", "Travel", "Filter Coffee", "AI & Robotics"],
+        "vector_10d": [0.8, 0.65, 0.8, 0.7, 0.3, 0.85, 0.95, 0.85, 0.75, 0.8],
         "mutual_connections": ["p1", "p9", "p11", "p13", "p23"],
         "readiness_stage": "Core Values",
         "location": "Sadashivanagar, Bengaluru",
@@ -185,6 +209,7 @@ INITIAL_PROFILES = [
         "bio": "Blockchain Auditor & scuba diver. Looking for an ambitious partner who values trust, deep loyalty, and shared world adventures.",
         "lifestyle_traits": ["Extrovert", "Early-Bird", "Adventurous", "Career-Driven", "Fitness"],
         "interests": ["Scuba Diving", "Travel", "Startups", "Wine Tasting", "Fine Dining"],
+        "vector_10d": [0.65, 0.9, 0.9, 0.8, 0.25, 0.9, 0.9, 0.85, 0.85, 0.6],
         "mutual_connections": ["p6", "p10", "p12", "p14", "p24"],
         "readiness_stage": "Long-Term Commitment",
         "location": "Koramangala, Bengaluru",
@@ -199,6 +224,7 @@ INITIAL_PROFILES = [
         "bio": "Cloud DevOps lead & vinyl record collector. Value authentic conversations over small talk. Tell me your top 3 favorite albums.",
         "lifestyle_traits": ["Ambivert", "Night-Owl", "Music-Lover", "Career-Driven", "Calm"],
         "interests": ["Vinyl Records", "Jazz Music", "Indie Music", "Podcasts", "Travel"],
+        "vector_10d": [0.6, 0.55, 0.75, 0.65, 0.8, 0.6, 0.75, 0.85, 0.8, 0.75],
         "mutual_connections": ["p7", "p13", "p15", "p17", "p25"],
         "readiness_stage": "Lifestyle Compatibility",
         "location": "Bellandur, Bengaluru",
@@ -213,240 +239,21 @@ INITIAL_PROFILES = [
         "bio": "Reinforcement Learning researcher & dog shelter volunteer. Seeking kindness, sharp intellect, and shared Sunday brunches.",
         "lifestyle_traits": ["Introvert", "Early-Bird", "Animal-Lover", "Empath", "Non-Smoker"],
         "interests": ["Dogs & Pets", "AI & Robotics", "Yoga", "Filter Coffee", "Indie Music"],
+        "vector_10d": [0.55, 0.4, 0.85, 0.75, 0.3, 0.7, 0.7, 0.9, 0.85, 1.0],
         "mutual_connections": ["p2", "p14", "p16", "p18", "p26"],
         "readiness_stage": "Core Values",
         "location": "Koramangala, Bengaluru",
         "avatar": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p16",
-        "name": "Kunal Ghosh",
-        "age": 24,
-        "gender": "Male",
-        "interested_in": ["Female"],
-        "bio": "Drone builder & outdoor trail runner. Seeking someone who enjoys spontaneous weekend road trips and cooking together at home.",
-        "lifestyle_traits": ["Extrovert", "Early-Bird", "Gym", "Outdoor-Enthusiast", "Foodie"],
-        "interests": ["Trail Running", "Trekking", "Robotics", "Street Food", "Marathon"],
-        "mutual_connections": ["p4", "p15", "p17", "p19", "p27"],
-        "readiness_stage": "Lifestyle Compatibility",
-        "location": "Electronic City, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p17",
-        "name": "Tanvi Chawla",
-        "age": 21,
-        "gender": "Female",
-        "interested_in": ["Male"],
-        "bio": "Junior Data Journalist & potter. Looking for playful dates, witty banter, and someone who knows the best indie book cafes.",
-        "lifestyle_traits": ["Ambivert", "Night-Owl", "Creative", "Bookworm", "Coffee-Addict"],
-        "interests": ["Ceramics", "Literature", "Indie Music", "Filter Coffee", "Photography"],
-        "mutual_connections": ["p5", "p14", "p16", "p18", "p28"],
-        "readiness_stage": "Icebreaker",
-        "location": "Frazer Town, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p18",
-        "name": "Arjun Reddy",
-        "age": 21,
-        "gender": "Male",
-        "interested_in": ["Female"],
-        "bio": "Computer Science fresher & guitarist. Always curious, love trying different cuisines, and passionate about music production.",
-        "lifestyle_traits": ["Extrovert", "Night-Owl", "Creative", "Music-Lover", "Fun-Loving"],
-        "interests": ["Guitar", "Indie Music", "Anime", "Street Food", "Gaming"],
-        "mutual_connections": ["p7", "p15", "p17", "p19", "p29"],
-        "readiness_stage": "Icebreaker",
-        "location": "BTM Layout, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p19",
-        "name": "Pooja Deshmukh",
-        "age": 22,
-        "gender": "Female",
-        "interested_in": ["Male"],
-        "bio": "FinTech Analyst & badminton player. Seeking an ambitious, kind partner who loves city night drives and Sunday morning hikes.",
-        "lifestyle_traits": ["Ambivert", "Early-Bird", "Sports-Lover", "Organized", "Non-Smoker"],
-        "interests": ["Badminton", "Trekking", "FinTech", "Photography", "Podcasts"],
-        "mutual_connections": ["p8", "p16", "p18", "p20", "p30"],
-        "readiness_stage": "Core Values",
-        "location": "HSR Layout, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1548142813-c348350df52b?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p20",
-        "name": "Nikhil Agarwal",
-        "age": 22,
-        "gender": "Male",
-        "interested_in": ["Female"],
-        "bio": "Systems programmer & chess player. I enjoy peaceful rainy evenings, complex strategy games, and thoughtful conversations.",
-        "lifestyle_traits": ["Introvert", "Night-Owl", "Analytical", "Calm", "Bookworm"],
-        "interests": ["Chess", "Algorithms", "Literature", "Filter Coffee", "Board Games"],
-        "mutual_connections": ["p9", "p19", "p21", "p23", "p25"],
-        "readiness_stage": "Core Values",
-        "location": "Basavanagudi, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p21",
-        "name": "Deepika Nambiar",
-        "age": 23,
-        "gender": "Female",
-        "interested_in": ["Male"],
-        "bio": "Mobile App Architect & sourdough baker. Looking for mutual support, shared dreams, and cozy weekend brunches.",
-        "lifestyle_traits": ["Ambivert", "Early-Bird", "Foodie", "Creative", "Organized"],
-        "interests": ["Baking", "Design", "Filter Coffee", "Yoga", "Travel"],
-        "mutual_connections": ["p10", "p20", "p22", "p24", "p26"],
-        "readiness_stage": "Lifestyle Compatibility",
-        "location": "Indiranagar, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1534751516642-a171edd2521b?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p22",
-        "name": "Harsh Vardhan",
-        "age": 24,
-        "gender": "Male",
-        "interested_in": ["Female"],
-        "bio": "Database engineer & rock climber. Looking for genuine connection, laughter on bad days, and great travel stories.",
-        "lifestyle_traits": ["Extrovert", "Early-Bird", "Gym", "Adventurous", "Foodie"],
-        "interests": ["Rock Climbing", "Trekking", "Street Food", "Travel", "Craft Beer"],
-        "mutual_connections": ["p11", "p21", "p23", "p27", "p29"],
-        "readiness_stage": "Lifestyle Compatibility",
-        "location": "Koramangala, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p23",
-        "name": "Shreya Mukherjee",
-        "age": 22,
-        "gender": "Female",
-        "interested_in": ["Male"],
-        "bio": "Bio-informatics researcher & watercolor artist. I love plant nurseries, museum dates, and handwritten letters.",
-        "lifestyle_traits": ["Introvert", "Night-Owl", "Artistic", "Gentle", "Non-Smoker"],
-        "interests": ["Watercolor", "Art Galleries", "Literature", "Classical Dance", "Tea"],
-        "mutual_connections": ["p12", "p20", "p22", "p24", "p28"],
-        "readiness_stage": "Core Values",
-        "location": "Cooke Town, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p24",
-        "name": "Gaurav Tiwari",
-        "age": 23,
-        "gender": "Male",
-        "interested_in": ["Female"],
-        "bio": "Generative AI startup founder & standup comedy buff. Looking for someone with quick humor, big dreams, and a warm heart.",
-        "lifestyle_traits": ["Extrovert", "Night-Owl", "Ambitious", "Humorous", "Social-Drinker"],
-        "interests": ["Startups", "Standup Comedy", "Indie Music", "Sci-Fi Movies", "AI & Robotics"],
-        "mutual_connections": ["p13", "p21", "p23", "p25", "p30"],
-        "readiness_stage": "Lifestyle Compatibility",
-        "location": "HSR Layout, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p25",
-        "name": "Zoya Khan",
-        "age": 22,
-        "gender": "Female",
-        "interested_in": ["Male"],
-        "bio": "IoT builder & astro-photographer. Show me your playlist or let's go stargazing away from city lights.",
-        "lifestyle_traits": ["Ambivert", "Night-Owl", "Curious", "Stargazer", "Pet-Lover"],
-        "interests": ["Stargazing", "Photography", "Robotics", "Indie Music", "Cats"],
-        "mutual_connections": ["p14", "p20", "p24", "p26", "p28"],
-        "readiness_stage": "Icebreaker",
-        "location": "Richmond Town, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p26",
-        "name": "Tarun Saxena",
-        "age": 22,
-        "gender": "Male",
-        "interested_in": ["Female"],
-        "bio": "Pen-tester & synth-wave enthusiast. Seeking genuine vibes, good sushi, and engaging conversations that last till dawn.",
-        "lifestyle_traits": ["Introvert", "Night-Owl", "Gamer", "Cyber-Enthusiast", "Non-Smoker"],
-        "interests": ["Cyber Defense", "Synth-Wave", "Anime", "Japanese Food", "Gaming"],
-        "mutual_connections": ["p15", "p21", "p25", "p27", "p29"],
-        "readiness_stage": "Icebreaker",
-        "location": "BTM Layout, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p27",
-        "name": "Neha Bhatt",
-        "age": 23,
-        "gender": "Female",
-        "interested_in": ["Male"],
-        "bio": "Product Manager & marathon trainee. Passionate about sustainable fashion, weekend farmers markets, and heartfelt conversations.",
-        "lifestyle_traits": ["Extrovert", "Early-Bird", "Fitness", "Eco-Conscious", "Organized"],
-        "interests": ["Marathon", "Yoga", "Sustainable Fashion", "Podcasts", "Travel"],
-        "mutual_connections": ["p16", "p22", "p26", "p28", "p30"],
-        "readiness_stage": "Core Values",
-        "location": "Koramangala, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p28",
-        "name": "Varun Kapoor",
-        "age": 21,
-        "gender": "Male",
-        "interested_in": ["Female"],
-        "bio": "Frontend developer & anime sketch artist. Let's explore quirky art stores, try new ramen spots, and talk about our passions.",
-        "lifestyle_traits": ["Ambivert", "Night-Owl", "Creative", "Gamer", "Coffee-Addict"],
-        "interests": ["Anime", "Sketching", "Japanese Food", "Indie Music", "Gaming"],
-        "mutual_connections": ["p17", "p23", "p25", "p27", "p29"],
-        "readiness_stage": "Icebreaker",
-        "location": "HSR Layout, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p29",
-        "name": "Tara Sen",
-        "age": 23,
-        "gender": "Female",
-        "interested_in": ["Male"],
-        "bio": "Wildlife photographer & environmental advocate. Always ready for jungle safaris, birdwatching treks, and warm campfires.",
-        "lifestyle_traits": ["Introvert", "Early-Bird", "Adventurous", "Nature-Lover", "Vegetarian"],
-        "interests": ["Photography", "Wildlife", "Trekking", "Camping", "Literature"],
-        "mutual_connections": ["p18", "p22", "p26", "p28", "p30"],
-        "readiness_stage": "Core Values",
-        "location": "Sadashivanagar, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80"
-    },
-    {
-        "id": "p30",
-        "name": "Karan Singhal",
-        "age": 24,
-        "gender": "Male",
-        "interested_in": ["Female"],
-        "bio": "Management Consultant & squash champion. Looking for someone driven, compassionate, and fun to explore the world with.",
-        "lifestyle_traits": ["Extrovert", "Early-Bird", "Gym", "Ambitious", "Wine-Lover"],
-        "interests": ["Squash", "Travel", "Startups", "Fine Dining", "Podcasts"],
-        "mutual_connections": ["p19", "p24", "p27", "p29", "p13"],
-        "readiness_stage": "Long-Term Commitment",
-        "location": "Lavelle Road, Bengaluru",
-        "avatar": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=600&q=80"
     }
 ]
 
 # Directed Relationship Readiness & Value Progression DAG edges
-# Form: (Prerequisite / Stage, Next Stage / Milestone)
 READINESS_DAG_EDGES = [
-    ("Icebreaker & Casual Chemistry", "Shared Lifestyle & Habits", "Communication & Lifestyle Fit"),
-    ("Shared Lifestyle & Habits", "Emotional Vulnerability & Trust", "Mutual Reciprocity"),
+    ("Icebreaker / Quiz", "Lifestyle Alignment", "Communication & Habits"),
+    ("Lifestyle Alignment", "Emotional Vulnerability & Trust", "Mutual Reciprocity"),
     ("Emotional Vulnerability & Trust", "Core Values & Belief Alignment", "Value Compatibility"),
-    ("Core Values & Belief Alignment", "Conflict Resolution & Communication", "Maturity Test"),
-    ("Conflict Resolution & Communication", "Long-Term Commitment & Life Vision", "Final Partnership Milestone")
+    ("Core Values & Belief Alignment", "Commitment Readiness", "Life Vision & Long-Term")
 ]
-
-# Milestone stages order for profiles
-STAGE_PROGRESSION = {
-    "Icebreaker": 1,
-    "Lifestyle Compatibility": 2,
-    "Core Values": 3,
-    "Long-Term Commitment": 4
-}
 
 def get_dating_dataset():
     """Returns deep copies of CupidGraph profiles and readiness DAG"""
