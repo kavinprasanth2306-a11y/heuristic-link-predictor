@@ -1,30 +1,61 @@
-# Academic Micro-Project Submission Report
+# Academic Micro-Project Submission Report & Technical Documentation
 ## Course: 25CS301 - Artificial Intelligence
-**Project Title:** CupidGraph: Graph-Theoretic Compatibility & Matchmaking Engine with Tinder-Style Interface  
-**Evaluation Scheme:** 40 Marks IA3 Rubric (Part A: Proposal & COs - 7 Marks, Part B: Working Model & Testing - 13 Marks, Viva/CO Relevance - 20 Marks)  
-**Curriculum Mapping:** CO2 (Graph Algorithms & Search), CO3 (Knowledge Representation), CO5 (AI Applications & Link Prediction)
+**Project Title:** CupidGraph: Graph-Theoretic Compatibility & Matchmaking Engine with Flutter UI  
+**Target Platform:** Android (Mobile Native APK)  
+**Evaluation Rubric:** 40 Marks IA3 (Part A: Proposal & CO Attainment - 7 Marks, Part B: Working Model & Testing - 13 Marks, Viva & Documentation - 20 Marks)  
+**Curriculum Mapping:** CO2 (Graph Algorithms & Search), CO3 (Knowledge Representation), CO5 (AI Applications)
 
 ---
 
 # PART A: PROJECT PROPOSAL & CO ATTAINMENT MAPPING (7 MARKS)
 
 ## 1. Problem Definition & Academic Relevance
-Conventional dating and social recommendation systems rely heavily on opaque, non-interpretable heuristics or shallow demographic filtering (e.g., location radius and binary likes). These architectures frequently suffer from:
+Conventional dating platforms rely on opaque recommendation algorithms and shallow demographic filtering (location radius and binary likes). These architectures suffer from:
 1. **The Cold-Start Trap:** Inability to recommend meaningful connections when social network degrees are zero.
 2. **Homophily vs. Diversity Imbalance:** Oversaturating recommendations with high-degree "celebrity" accounts while ignoring tightly-knit organic communities.
 3. **Lack of Explainable AI (XAI):** Presenting binary matches without transparency into why two individuals share high behavioral affinity.
 
-**CupidGraph** formulates human matchmaking as a **Multi-Relational Knowledge Graph & Link Prediction problem**. By synthesizing graph topology, semantic profile embeddings, and milestone progression DAGs, the system produces transparent, high-precision recommendations.
+**CupidGraph** formulates human matchmaking as a **Multi-Relational Knowledge Graph & Link Prediction problem**. By synthesizing graph topology, true 10-dimensional preference vector embeddings, and milestone progression DAGs, the system produces transparent, high-precision recommendations.
 
 ---
 
-## 2. Curriculum Course Outcome (CO) Mapping
+## 2. Comprehensive Onboarding, Auth & Profile Gating Workflow
+
+### A. Authentication & Google Sign-In
+- Initial landing screen features CupidGraph branding, value proposition, and a **"Continue with Google"** button.
+- Captures the user's name, email, and avatar with immediate session state synchronization.
+
+### B. Automated Verification & Welcome Receipt (SMTP Mailer)
+- Upon profile completion, the backend triggers an automated, styled HTML welcome email via SMTP:
+  - **Sender:** `darkin2306@gmail.com`
+  - **Contents:** Unique CupidGraph Match ID (`CG-7829-AI`), baseline 10-D compatibility vector embedding, and community safety guidelines.
+  - **Fallback:** Includes graceful mock logging if SMTP credentials are not configured in local evaluation environments.
+
+### C. Mandatory 10-Question Compatibility Wizard (10-D Vector Embedding)
+Before unlocking the swipe deck, users answer 10 orthogonal preference questions, mapping to a true normalized 10-dimensional numerical vector $\vec{U} \in [0.0, 1.0]^{10}$:
+1. **Weekend Vibe:** Clubbing/Concerts (0.9), Cozy Movie (0.3), Outdoor Trek (0.7), Coding/Creative (0.5)
+2. **Social Battery:** 1 to 5 Slider (Deep Introvert 0.0 to Extreme Extrovert 1.0)
+3. **Core Relationship Goal:** Long-Term (1.0), Casual (0.3), Networking/Friends (0.6), Undecided (0.4)
+4. **Communication Style:** Instant Texter (0.85), Phone Calls (0.95), In-Person (0.70), Async/Memes (0.40)
+5. **Sleep Schedule / Lifestyle:** Early Bird 5 AM (0.15), Flexible (0.50), Night Owl 3 AM (0.90)
+6. **Fitness & Activity:** Daily Gym/Athletic (0.95), Casual Walks/Yoga (0.60), Couch/Gaming (0.20)
+7. **Travel Mindset:** Spontaneous Backpacker (0.85), Luxury Itinerary (0.65), Staycation (0.35)
+8. **Intellectual Spark:** Tech & AI (0.95), Philosophy (0.85), Fine Arts/Music (0.75), Pop Culture/Gaming (0.50)
+9. **Conflict Resolution:** Immediate Discussion (0.85), Space First (0.65), Let It Slide (0.35)
+10. **Pet Preference:** Dogs (0.90), Cats (0.85), Both (1.00), Neither (0.10)
+
+### D. Hard Photo Gating Verification
+- The **"Enter CupidGraph Network"** button remains strictly **disabled** until at least 1 verified profile photo is selected and all 10 compatibility questions are answered, preventing ghost accounts or bot injection.
+
+---
+
+## 3. Curriculum Course Outcome (CO) Mapping
 
 | Course Outcome (CO) | Syllabus Requirement | CupidGraph Algorithmic Implementation | Attainment |
 | :--- | :--- | :--- | :--- |
 | **CO2: Graph Algorithms & Search** | Design & implement optimal pathfinding, spanning trees, and graph search | - **Kruskal's Algorithm** with Disjoint Set Union (DSU with union by rank and path compression)<br>- **Prim's Algorithm** with Binary Min-Heap Priority Queue<br>- **A\* Heuristic Search** for shortest trusted social introduction route ($f(n) = g(n) + h(n)$) | **100% (High)** |
-| **CO3: Knowledge Representation & Reasoning** | Represent complex domain knowledge and structural dependencies | - Multi-relational Dating Knowledge Graph<br>- **Directed Acyclic Graph (DAG)** of relationship milestones (Icebreaker $\rightarrow$ Lifestyle $\rightarrow$ Core Values $\rightarrow$ Commitment)<br>- **Kahn's BFS In-degree** & Cycle Detection | **100% (High)** |
-| **CO5: AI Applications & Machine Learning** | Formulate, benchmark, and deploy AI recommendation models | - Multi-hot User Feature Vectorization<br>- **Cosine Similarity** semantic feature space<br>- **Adamic-Adar** degree-penalized link prediction<br>- Empirical **20% Edge-Masking** Benchmark Suite | **100% (High)** |
+| **CO3: Knowledge Representation & Reasoning** | Represent complex domain knowledge and structural dependencies | - Multi-relational Dating Knowledge Graph<br>- **Directed Acyclic Graph (DAG)** of relationship milestones (Icebreaker $\rightarrow$ Lifestyle $\rightarrow$ Core Values $\rightarrow$ Commitment Readiness)<br>- **Kahn's BFS In-degree** & Cycle Detection | **100% (High)** |
+| **CO5: AI Applications & Machine Learning** | Formulate, benchmark, and deploy AI recommendation models | - Real **10-Dimensional Vector Cosine Similarity** ($\vec{U} \cdot \vec{V} / (\|\vec{U}\|\|\vec{V}\|)$)<br>- **Adamic-Adar** degree-penalized link prediction ($\sum 1/\log|N(z)|$)<br>- Empirical **20% Edge-Masking** Benchmark Suite | **100% (High)** |
 
 ---
 
@@ -33,70 +64,23 @@ Conventional dating and social recommendation systems rely heavily on opaque, no
 ## 1. Mathematical Formulations
 
 ### A. Relationship Friction / Dissimilarity Cost Function (for MST & A*)
-In social network matchmaking, a high affinity score $S(u, v) \in [0, 100]$ represents low relationship friction. Because MST and A* algorithms minimize edge weight, we define the dissimilarity cost $W(u, v)$ as:
+In social matchmaking, a high affinity score $S(u, v) \in [0, 100]$ represents low relationship friction. Because MST and A* algorithms minimize edge weight, we define the dissimilarity cost $W(u, v)$ as:
 $$W(u, v) = 1.0 - \frac{S(u, v)}{100.0}$$
 Minimizing total cost $\sum W(u, v)$ mathematically maximizes global community cohesion.
 
-### B. Adamic-Adar Degree-Penalized Social Index
-$$\text{Adamic-Adar}(u, v) = \sum_{z \in N(u) \cap N(v)} \frac{1}{\log |N(z)|}$$
-*Theoretical Rationale:* Shared acquaintances $z$ with smaller degrees $|N(z)|$ indicate intimate personal circles and carry significantly higher predictive matchmaking weight than "celebrity" accounts.
+### B. True 10-D Vector Cosine Similarity
+$$\text{CosineSimilarity}(\vec{u}, \vec{v}) = \frac{\sum_{i=1}^{10} u_i v_i}{\sqrt{\sum_{i=1}^{10} u_i^2} \sqrt{\sum_{i=1}^{10} v_i^2}}$$
 
-### C. Multi-Hot Trait & Interest Cosine Similarity
-$$\text{CosineSimilarity}(u, v) = \frac{\vec{u} \cdot \vec{v}}{\|\vec{u}\| \|\vec{v}\|} = \frac{\sum_{i=1}^D u_i v_i}{\sqrt{\sum_{i=1}^D u_i^2} \sqrt{\sum_{i=1}^D v_i^2}}$$
+### C. Adamic-Adar Degree-Penalized Social Index
+$$\text{Adamic-Adar}(u, v) = \sum_{z \in N(u) \cap N(v)} \frac{1}{\log |N(z)|}$$
 
 ### D. A* Heuristic Shortest Trusted Introduction Path
 $$f(n) = g(n) + h(n)$$
-- $g(n) = \sum_{e \in \text{path}} W(e) + 0.2$ (accumulated relationship resistance)
-- $h(n) = (1.0 - \text{CosineSimilarity}(n, \text{Target})) \times 2.0$ (admissible heuristic distance)
+- $g(n) = \sum_{e \in \text{path}} (W(e) + 0.2)$
+- $h(n) = (1.0 - \text{CosineSimilarity}(\vec{n}, \vec{\text{Target}})) \times 2.0$
 
 ### E. Hybrid AI Compatibility Score (0 - 100%)
-$$\text{Score}(u, v) = \left[ 0.45 \cdot \text{CosineSim} + 0.25 \cdot \frac{\text{AdamicAdar}}{2.0} + 0.15 \cdot \text{Jaccard} + 0.15 \cdot \text{ReadinessBonus} \right] \times 100$$
-
----
-
-## 2. Algorithm Pseudocode
-
-### Kruskal’s Minimum Spanning Tree (DSU)
-```python
-function KruskalMST(Nodes V, Edges E):
-    Sort E in non-decreasing order of dissimilarity cost W(u, v)
-    DSU = InitializeDisjointSets(V)
-    MST = []
-    total_cost = 0.0
-    for edge (u, v, cost) in E:
-        root_u = DSU.Find(u)
-        root_v = DSU.Find(v)
-        if root_u != root_v:
-            MST.append(edge)
-            total_cost += cost
-            DSU.Union(root_u, root_v)
-            if len(MST) == len(V) - 1:
-                break
-    return MST, total_cost
-```
-
-### Kahn’s Algorithm for Relationship Readiness DAG
-```python
-function KahnsReadinessSort(Milestones V, DirectedPrerequisites E):
-    in_degree = {v: 0 for v in V}
-    for (u, v) in E:
-        in_degree[v] += 1
-    
-    Queue = [v for v in V if in_degree[v] == 0]
-    TopologicalOrder = []
-    
-    while Queue is not empty:
-        curr = Queue.pop_front()
-        TopologicalOrder.append(curr)
-        for neighbor in Adjacency[curr]:
-            in_degree[neighbor] -= 1
-            if in_degree[neighbor] == 0:
-                Queue.push_back(neighbor)
-                
-    if len(TopologicalOrder) != len(V):
-        report "Cycle Detected in Relationship Milestone Graph"
-    return TopologicalOrder
-```
+$$\text{Score}(u, v) = \left[ 0.50 \cdot \text{CosineSim} + 0.25 \cdot \frac{\text{AdamicAdar}}{2.0} + 0.10 \cdot \text{Jaccard} + 0.15 \cdot \text{ReadinessBonus} \right] \times 100$$
 
 ---
 
@@ -113,18 +97,7 @@ function KahnsReadinessSort(Milestones V, DirectedPrerequisites E):
 
 ---
 
-## 2. Scalability Runtime Benchmark Table
-
-| Cohort Scale ($N$) | Total Edges ($E$) | Kruskal's MST (ms) | Prim's MST (ms) | Kahn's Sort (ms) |
-| :--- | :--- | :--- | :--- | :--- |
-| **N = 10** | 30 | 0.048 ms | 0.042 ms | 0.025 ms |
-| **N = 50** | 150 | 0.245 ms | 0.285 ms | 0.110 ms |
-| **N = 100** | 300 | 0.650 ms | 0.780 ms | 0.270 ms |
-| **N = 250** | 750 | 1.820 ms | 2.450 ms | 0.720 ms |
-
----
-
-## 3. Automated Unit & Integration Test Case Matrix (8/8 PASS)
+## 2. Automated Unit & Integration Test Case Matrix (8/8 PASS)
 
 | Test ID | Test Case Name | Input Scenario | Expected Output | Status |
 | :--- | :--- | :--- | :--- | :--- |
@@ -139,8 +112,18 @@ function KahnsReadinessSort(Milestones V, DirectedPrerequisites E):
 
 ---
 
-# PART D: CONCLUSION & JURY DEFENSE SUMMARY
-**CupidGraph** successfully fulfills all evaluation requirements under Course Outcomes CO2, CO3, and CO5:
-- It integrates an intuitive **Tinder-style Flutter mobile frontend** with smooth gesture physics, live AI match percentages, and "It's a Match!" celebration dialogs.
-- It deploys a robust **Python Flask REST API** implementing from-scratch graph algorithms with zero external shortcuts.
-- It proves algorithmic superiority over naive baselines through a comprehensive **4-mark automated testing and benchmarking suite**.
+# PART D: ANDROID DEPLOYMENT & EXECUTION INSTRUCTIONS
+
+### 1. Launch the Backend REST API Server
+```powershell
+cd c:\Users\Jagadesh\OneDrive\Desktop\ai\micro\backend
+python app.py
+```
+*Note: In Android emulators, the app automatically communicates with the host machine via `http://10.0.2.2:5000/api`.*
+
+### 2. Build & Run on Android
+```powershell
+cd c:\Users\Jagadesh\OneDrive\Desktop\ai\micro\frontend_flutter
+flutter run
+```
+*Direct APK location:* `build/app/outputs/flutter-apk/app-debug.apk`
