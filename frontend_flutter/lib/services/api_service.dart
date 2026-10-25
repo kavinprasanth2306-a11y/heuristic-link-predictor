@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/dating_profile.dart';
@@ -215,5 +216,45 @@ class ApiService {
     }
 
     throw Exception('Cannot reach CupidGraph backend at $baseUrl. Check if python app.py is running on port 5000.');
+  }
+
+  // =====================================================================
+  // IN-APP OVER-THE-AIR (OTA) AUTO-UPDATE LOGIC
+  // =====================================================================
+  static const int currentVersionCode = 1;
+  static const String currentVersionName = '1.0.0';
+
+  static Future<Map<String, dynamic>?> checkAppUpdate() async {
+    try {
+      final res = await _getWithFallback('/app/version');
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body);
+        if (data['status'] == 'success') {
+          final int latestCode = data['latest_version_code'] ?? 1;
+          if (latestCode > currentVersionCode) {
+            return {
+              'hasUpdate': true,
+              'latestVersion': data['latest_version'] ?? '1.0.1',
+              'releaseNotes': data['release_notes'] ?? 'New features and improvements available!',
+              'downloadUrl': '$baseUrl/app/download',
+              'isApkAvailable': data['is_apk_available'] ?? false,
+              'fileSizeBytes': data['file_size_bytes'] ?? 0,
+            };
+          }
+        }
+      }
+    } catch (e) {
+      // Silently ignore update check errors on network issues
+    }
+    return null;
+  }
+
+  static Future<bool> openApkDownload() async {
+    try {
+      final downloadUri = Uri.parse('$baseUrl/app/download');
+      return await launchUrl(downloadUri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      return false;
+    }
   }
 }
