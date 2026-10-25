@@ -118,24 +118,30 @@ class VivaPrepScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: const Color(0xFF1E293B),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white.withOpacity(0.08)),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                         ),
-                        child: ExpansionTile(
-                          iconColor: const Color(0xFFFF4458),
-                          collapsedIconColor: Colors.white38,
-                          title: Text(
-                            q['q']!,
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                              child: Text(
-                                q['a']!,
-                                style: const TextStyle(color: Colors.white70, fontSize: 11, height: 1.4),
-                              ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                          child: ExpansionTile(
+                            shape: const Border(),
+                            collapsedShape: const Border(),
+                            iconColor: const Color(0xFFFF4458),
+                            collapsedIconColor: Colors.white38,
+                            title: Text(
+                              q['q']!,
+                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                             ),
-                          ],
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                child: Text(
+                                  q['a']!,
+                                  style: const TextStyle(color: Colors.white70, fontSize: 11, height: 1.4),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     }),
