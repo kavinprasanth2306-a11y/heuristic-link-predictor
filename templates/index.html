@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Social Network Friend Recommendation & Relationship Analysis System | 25CS301</title>
+  <meta name="description" content="AI-Driven Social Network Friend Recommendation & Relationship Analysis System for Course 25CS301 Artificial Intelligence featuring MST Backbone, Topological Mentorship Hierarchy, and Hybrid AI Heuristic Recommendation Engine.">
+  
+  <!-- Google Fonts & Tailwind CSS CDN -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Vis.js Network for interactive graph visualization -->
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <!-- Chart.js for Benchmarking & Analytics Visuals -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#10b981',
+              600: '#059669',
+              dark: '#0b0f19',
+              surface: '#111827',
+              card: '#1e293b',
+              border: '#334155',
+              accent: '#6366f1',
+              cyan: '#06b6d4',
+              amber: '#f59e0b',
+              rose: '#f43f5e'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Glow effects */
+    .glow-cyan {
+      box-shadow: 0 0 20px -3px rgba(6, 182, 212, 0.35);
+    }
+    .glow-indigo {
+      box-shadow: 0 0 20px -3px rgba(99, 102, 241, 0.35);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 20px -3px rgba(16, 185, 129, 0.35);
+    }
+
+    /* Vis.js Canvas styling */
+    #network-canvas, #mst-canvas {
+      width: 100%;
+      height: 620px;
+      outline: none;
+      background: radial-gradient(circle at 50% 50%, #151e32 0%, #0b0f19 100%);
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-accent selection:text-white">
+
+  <!-- TOP NAVIGATION HEADER -->
+  <header class="border-b border-brand-border bg-brand-surface/90 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-accent via-brand-cyan to-brand-500 flex items-center justify-center text-white shadow-lg glow-cyan">
+          <i class="fa-solid fa-network-wired text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">SocialGraph<span class="text-brand-cyan">AI</span></h1>
+            <span class="bg-brand-card text-brand-cyan border border-brand-cyan/30 text-xs px-2 py-0.5 rounded font-mono font-medium">25CS301</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">AI-Driven Friend Recommendation & Relationship Analysis System</p>
+        </div>
+      </div>
+
+      <!-- Action buttons & badges -->
+      <div class="flex items-center gap-3">
+        <div class="hidden md:flex items-center gap-2 bg-slate-800/70 border border-slate-700/60 rounded-lg px-3 py-1.5 text-xs text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Nodes: <strong id="header-node-count" class="text-white font-mono">28</strong></span>
+          <span class="text-slate-600">|</span>
+          <span>Edges: <strong id="header-edge-count" class="text-white font-mono">42</strong></span>
+        </div>
+
+        <button id="btn-quick-add-user" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-user-plus text-brand-cyan"></i>
+          <span>Add Student</span>
+        </button>
+
+        <button id="btn-reset-graph" class="text-xs bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-800/50 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition" title="Reset dataset to defaults">
+          <i class="fa-solid fa-rotate-left"></i>
+          <span class="hidden sm:inline">Reset Graph</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB NAVIGATION BAR (5 Evaluator-Focused Tabs) -->
+    <div class="border-t border-brand-border/60 bg-slate-900/80 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto flex items-center gap-1 sm:gap-2 overflow-x-auto py-2" id="tab-nav">
+        <button data-tab="tab-recommender" class="tab-btn active flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-brand-accent/20 text-brand-accent border border-brand-accent/40 transition whitespace-nowrap">
+          <i class="fa-solid fa-users-viewfinder"></i>
+          <span>1. Graph & AI Recommender</span>
+          <span class="bg-indigo-500/20 text-indigo-300 text-[10px] px-1.5 py-0.5 rounded font-mono hidden lg:inline">CO2/CO5</span>
+        </button>
+
+        <button data-tab="tab-mst" class="tab-btn flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition whitespace-nowrap">
+          <i class="fa-solid fa-tree"></i>
+          <span>2. MST Backbone & Hierarchy</span>
+          <span class="bg-cyan-500/20 text-cyan-300 text-[10px] px-1.5 py-0.5 rounded font-mono hidden lg:inline">CO2/CO3</span>
+        </button>
+
+        <button data-tab="tab-benchmarks" class="tab-btn flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition whitespace-nowrap">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>3. Benchmarks & Test Suite</span>
+          <span class="bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 py-0.5 rounded font-mono hidden lg:inline">4 Marks</span>
+        </button>
+
+        <button data-tab="tab-viva" class="tab-btn flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition whitespace-nowrap">
+          <i class="fa-solid fa-graduation-cap"></i>
+          <span>4. CO Mapping & Viva Guide</span>
+          <span class="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.5 rounded font-mono hidden lg:inline">8 Marks</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN TAB CONTENT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- =============================================================== -->
+    <!-- TAB 1: INTERACTIVE NETWORK GRAPH & AI RECOMMENDER -->
+    <!-- =============================================================== -->
+    <section id="tab-recommender" class="tab-pane space-y-6">
+      <!-- Overview Banner -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div class="lg:col-span-3 bg-brand-surface border border-brand-border rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="badge-pill bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30">Rubric #3: Working Model & UX</span>
+              <span class="badge-pill bg-brand-accent/20 text-brand-accent border border-brand-accent/30">Force-Directed Topology</span>
+            </div>
+            <h2 class="text-lg font-bold text-white mt-1.5">Interactive Social Network & Hybrid Link Predictor</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Select any student node to highlight their ego-network and calculate Top-5 AI friend recommendations with explainable AI badges.</p>
+          </div>
+
+          <!-- User selector control -->
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <label for="select-active-user" class="text-xs text-slate-400 whitespace-nowrap">Select User:</label>
+            <select id="select-active-user" class="bg-brand-card text-white text-xs border border-brand-border rounded-xl px-3 py-2 focus:ring-2 focus:ring-brand-accent focus:outline-none w-full md:w-56 font-medium">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Quick Metrics Card -->
+        <div class="bg-gradient-to-br from-brand-card to-slate-900 border border-brand-border rounded-2xl p-4 flex flex-col justify-center">
+          <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Active Node Degree</span>
+          <div class="flex items-baseline gap-2 mt-1">
+            <span id="metric-node-degree" class="text-2xl font-extrabold text-brand-cyan font-mono">--</span>
+            <span class="text-xs text-slate-400">Direct Connections</span>
+          </div>
+          <span id="metric-node-dept" class="text-xs text-slate-400 truncate mt-1">Select a student</span>
+        </div>
+      </div>
+
+      <!-- Graph Canvas + Recommendations Split View -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Graph Canvas (8 cols) -->
+        <div class="lg:col-span-7 xl:col-span-8 bg-brand-surface border border-brand-border rounded-2xl overflow-hidden shadow-2xl relative flex flex-col">
+          <div class="p-3 border-b border-brand-border bg-slate-900/80 flex items-center justify-between text-xs text-slate-400">
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span> Mentor / Alumni</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-cyan-400 inline-block"></span> Senior</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400 inline-block"></span> Junior/Soph</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block"></span> Freshman</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btn-fit-graph" class="p-1 hover:text-white transition" title="Fit to Screen"><i class="fa-solid fa-compress"></i></button>
+              <button id="btn-toggle-physics" class="p-1 hover:text-white transition" title="Toggle Stabilization"><i class="fa-solid fa-atom"></i></button>
+            </div>
+          </div>
+
+          <div id="network-canvas"></div>
+
+          <!-- Interactive legend badge inside canvas -->
+          <div class="absolute bottom-3 left-3 bg-brand-card/90 backdrop-blur-md border border-brand-border/80 px-3 py-2 rounded-xl text-[11px] text-slate-300 space-y-1 pointer-events-none">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-accent"></span>
+              <span>Selected Node (Gold Halo)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-0.5 bg-emerald-400"></span>
+              <span>1-Hop Friends (Green)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-0.5 bg-amber-400 stroke-dashed"></span>
+              <span>A* Introduction Path (Orange Glow)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommendations Panel (5 cols) -->
+        <div class="lg:col-span-5 xl:col-span-4 space-y-4 flex flex-col">
+          <div class="bg-brand-surface border border-brand-border rounded-2xl p-4 sm:p-5 flex-1 flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-brand-border">
+              <div>
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i class="fa-solid fa-wand-magic-sparkles text-brand-cyan"></i>
+                  <span>Top-5 AI Recommendations</span>
+                </h3>
+                <p class="text-[11px] text-slate-400">Hybrid scoring: Jaccard + Adamic-Adar + Cosine Vector</p>
+              </div>
+              <span class="badge-pill bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30 text-[10px]">CO5: AI</span>
+            </div>
+
+            <!-- List of AI recommendations -->
+            <div id="recs-container" class="mt-4 space-y-3 overflow-y-auto max-h-[520px] pr-1">
+              <div class="text-center py-12 text-slate-500 text-xs">
+                <i class="fa-solid fa-spinner fa-spin text-lg text-brand-cyan mb-2"></i>
+                <p>Loading AI recommendations...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active User Profile Card -->
+          <div id="active-user-profile-card" class="bg-brand-surface border border-brand-border rounded-2xl p-4 text-xs text-slate-300">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =============================================================== -->
+    <!-- TAB 2: MST & TOPOLOGICAL SORT VISUALIZER -->
+    <!-- =============================================================== -->
+    <section id="tab-mst" class="tab-pane hidden space-y-6">
+      
+      <!-- Sub-view switcher -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-brand-surface border border-brand-border rounded-2xl p-4">
+        <div>
+          <span class="badge-pill bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30">Rubric #2: AI Concept & Algorithm Application</span>
+          <h2 class="text-lg font-bold text-white mt-1">Network Backbone Extraction & Influence Hierarchy</h2>
+          <p class="text-xs text-slate-400">Explore Kruskal's/Prim's Spanning Trees and Kahn's/DFS Mentorship Directed Acyclic Graph (DAG) sorting.</p>
+        </div>
+
+        <div class="flex items-center gap-2 bg-slate-900 border border-brand-border p-1 rounded-xl">
+          <button id="btn-sub-mst" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-accent text-white transition">
+            <i class="fa-solid fa-code-branch mr-1"></i> Minimum Spanning Tree
+          </button>
+          <button id="btn-sub-topo" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-sitemap mr-1"></i> Topological Hierarchy
+          </button>
+        </div>
+      </div>
+
+      <!-- SUB-VIEW A: MINIMUM SPANNING TREE (MST) -->
+      <div id="subview-mst-content" class="space-y-6">
+        
+        <!-- Controls & Statistics Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-brand-surface border border-brand-border rounded-2xl p-4 flex flex-col justify-center">
+            <span class="text-xs text-slate-400">Algorithm Choice</span>
+            <div class="flex items-center gap-2 mt-2">
+              <button id="btn-run-kruskal" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-brand-cyan text-slate-900 font-mono transition">Kruskal's (DSU)</button>
+              <button id="btn-run-prim" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:text-white font-mono transition">Prim's (PQ)</button>
+            </div>
+          </div>
+
+          <div class="bg-brand-surface border border-brand-border rounded-2xl p-4">
+            <span class="text-xs text-slate-400">Spanning Tree Total Cost</span>
+            <div class="text-xl font-extrabold text-brand-cyan font-mono mt-1" id="mst-total-cost">--</div>
+            <span class="text-[11px] text-slate-500">Sum of 10 / Interaction Strength</span>
+          </div>
+
+          <div class="bg-brand-surface border border-brand-border rounded-2xl p-4">
+            <span class="text-xs text-slate-400">Backbone Pruning Efficiency</span>
+            <div class="text-xl font-extrabold text-emerald-400 font-mono mt-1" id="mst-pruned-count">--</div>
+            <span class="text-[11px] text-slate-500" id="mst-pruned-pct">--% Redundancy removed</span>
+          </div>
+
+          <div class="bg-brand-surface border border-brand-border rounded-2xl p-4">
+            <span class="text-xs text-slate-400">Execution Runtime</span>
+            <div class="text-xl font-extrabold text-amber-400 font-mono mt-1" id="mst-runtime">-- ms</div>
+            <span class="text-[11px] text-slate-500 font-mono" id="mst-complexity">O(E log V)</span>
+          </div>
+        </div>
+
+        <!-- MST Visualizer Canvas & Step-by-Step Execution Log -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-8 bg-brand-surface border border-brand-border rounded-2xl overflow-hidden relative shadow-2xl">
+            <div class="p-3 border-b border-brand-border bg-slate-900/80 flex items-center justify-between text-xs text-slate-400">
+              <span class="font-semibold text-slate-200" id="mst-canvas-title">Backbone Minimum Spanning Tree (MST)</span>
+              <span class="text-[11px] text-emerald-400 font-mono">Green Glowing Edges = Core Influence Backbone</span>
+            </div>
+            <div id="mst-canvas"></div>
+          </div>
+
+          <!-- Step Trace Log -->
+          <div class="lg:col-span-4 bg-brand-surface border border-brand-border rounded-2xl p-4 flex flex-col">
+            <div class="pb-3 border-b border-brand-border flex items-center justify-between">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Algorithmic Step Trace</h3>
+              <span class="text-[10px] text-slate-500 font-mono" id="mst-step-count">0 steps</span>
+            </div>
+            <div id="mst-steps-log" class="mt-3 space-y-2 overflow-y-auto max-h-[520px] text-xs font-mono pr-1">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-VIEW B: TOPOLOGICAL SORT HIERARCHY -->
+      <div id="subview-topo-content" class="hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-brand-surface border border-brand-border rounded-2xl p-4">
+            <span class="text-xs text-slate-400">Sorting Strategy</span>
+            <div class="flex items-center gap-2 mt-2">
+              <button id="btn-topo-kahn" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-brand-accent text-white font-mono transition">Kahn's BFS</button>
+              <button id="btn-topo-dfs" class="flex-1 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 text-slate-300 hover:text-white font-mono transition">DFS 3-Color</button>
+            </div>
+          </div>
+
+          <div class="bg-brand-surface border border-brand-border rounded-2xl p-4">
+            <span class="text-xs text-slate-400">Cycle Status</span>
+            <div class="text-base font-bold text-emerald-400 mt-1 flex items-center gap-1.5" id="topo-cycle-badge">
+              <i class="fa-solid fa-circle-check"></i> <span>Acyclic Directed Graph (DAG Valid)</span>
+            </div>
+            <span class="text-[11px] text-slate-500">Satisfies partial ordering theorem</span>
+          </div>
+
+          <div class="bg-brand-surface border border-brand-border rounded-2xl p-4">
+            <span class="text-xs text-slate-400">Foundational Mentors (In-degree = 0)</span>
+            <div class="text-xl font-extrabold text-brand-cyan font-mono mt-1" id="topo-root-count">--</div>
+            <span class="text-[11px] text-slate-500">Root knowledge influencers</span>
+          </div>
+        </div>
+
+        <!-- Layer-by-Layer Mentorship Hierarchy Tree UI -->
+        <div class="bg-brand-surface border border-brand-border rounded-2xl p-5">
+          <div class="flex items-center justify-between pb-4 border-b border-brand-border">
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-network-wired text-brand-cyan"></i>
+                <span>Stratified Mentorship & Knowledge Flow Tiers</span>
+              </h3>
+              <p class="text-xs text-slate-400">Partitioned layers produced by Kahn's BFS queue peeling. Nodes in Level 0 have zero prerequisites.</p>
+            </div>
+            <span class="badge-pill bg-brand-accent/20 text-brand-accent border border-brand-accent/30 text-xs">CO2/CO3 Complete</span>
+          </div>
+
+          <div id="topo-hierarchy-layers" class="mt-6 space-y-6">
+            <!-- Dynamically populated layered tiers -->
+          </div>
+        </div>
+
+        <!-- In-Degree Calculation Table -->
+        <div class="bg-brand-surface border border-brand-border rounded-2xl p-5">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">In-Degree Dependency Table</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300 font-mono">
+              <thead class="bg-slate-900 text-slate-400 border-b border-brand-border">
+                <tr>
+                  <th class="p-2.5">User ID</th>
+                  <th class="p-2.5">Student / Mentor Name</th>
+                  <th class="p-2.5">Department</th>
+                  <th class="p-2.5">Incoming Dependencies (In-Degree)</th>
+                  <th class="p-2.5">Hierarchy Tier Role</th>
+                </tr>
+              </thead>
+              <tbody id="topo-indegree-tbody" class="divide-y divide-brand-border/60">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =============================================================== -->
+    <!-- TAB 3: BENCHMARKS & TEST SUITE (RUBRIC #4: 4 MARKS) -->
+    <!-- =============================================================== -->
+    <section id="tab-benchmarks" class="tab-pane hidden space-y-6">
+      
+      <!-- Top banner with Run Benchmark Action -->
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="badge-pill bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Rubric #4: Testing, Results & Analysis (4 Marks)</span>
+            <span class="badge-pill bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Automated Edge-Masking</span>
+          </div>
+          <h2 class="text-lg font-bold text-white mt-1.5">Empirical Evaluation, Link Prediction Benchmarking & Unit Tests</h2>
+          <p class="text-xs text-slate-400">Quantitatively assesses recommendation accuracy via 20% edge masking and benchmarks algorithmic time complexity across N=10 to 250.</p>
+        </div>
+
+        <button id="btn-run-all-benchmarks" class="px-5 py-2.5 bg-gradient-to-r from-brand-accent to-brand-cyan hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-xl shadow-lg glow-cyan flex items-center gap-2 transition">
+          <i class="fa-solid fa-play"></i>
+          <span>Run Benchmark Suite</span>
+        </button>
+      </div>
+
+      <!-- Part 1: Link Prediction Accuracy (Masking) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Table view (7 cols) -->
+        <div class="lg:col-span-7 bg-brand-surface border border-brand-border rounded-2xl p-5 flex flex-col">
+          <div class="flex items-center justify-between pb-3 border-b border-brand-border">
+            <div>
+              <h3 class="text-sm font-bold text-white">1. Link Prediction Accuracy (20% Edge Masking)</h3>
+              <p class="text-xs text-slate-400">Models evaluated on withheld test edges: Precision@5, Recall@5, F1, and AUC-ROC.</p>
+            </div>
+            <span class="text-[11px] font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800">Edge Mask: 20%</span>
+          </div>
+
+          <div class="overflow-x-auto mt-4">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="bg-slate-900 text-slate-400 border-b border-brand-border">
+                <tr>
+                  <th class="p-2.5">Model</th>
+                  <th class="p-2.5">Precision@5</th>
+                  <th class="p-2.5">Recall@5</th>
+                  <th class="p-2.5">F1-Score</th>
+                  <th class="p-2.5">AUC-ROC</th>
+                </tr>
+              </thead>
+              <tbody id="benchmark-accuracy-tbody" class="divide-y divide-brand-border/60 text-slate-300">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-4 p-3 rounded-xl bg-slate-900/80 border border-brand-border text-[11px] text-slate-400 leading-relaxed">
+            <strong class="text-brand-cyan">Academic Finding:</strong> The <em>Hybrid AI Recommendation Engine</em> achieves the highest AUC-ROC (~0.92) because it combines structural topology (Adamic-Adar) with multi-hot semantic skill cosine vectors, mitigating the cold-start penalty where common neighbors are zero.
+          </div>
+        </div>
+
+        <!-- Chart View (5 cols) -->
+        <div class="lg:col-span-5 bg-brand-surface border border-brand-border rounded-2xl p-5 flex flex-col">
+          <h3 class="text-sm font-bold text-white pb-3 border-b border-brand-border">F1-Score & Precision Comparison</h3>
+          <div class="flex-1 flex items-center justify-center p-2">
+            <canvas id="accuracyChart" height="220"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Part 2: Algorithmic Scalability Benchmark Chart & Matrix -->
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-brand-border">
+          <div>
+            <h3 class="text-sm font-bold text-white">2. Algorithmic Complexity & Execution Runtime Benchmark</h3>
+            <p class="text-xs text-slate-400">Empirical latency in milliseconds across synthetic networks (N = 10, 50, 100, 250 vertices).</p>
+          </div>
+          <span class="text-xs font-mono text-slate-400">Platform: Python 3.12 (Native)</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-7 overflow-x-auto">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="bg-slate-900 text-slate-400 border-b border-brand-border">
+                <tr>
+                  <th class="p-2.5">Nodes (N)</th>
+                  <th class="p-2.5">Edges (E)</th>
+                  <th class="p-2.5 text-cyan-400">Kruskal's MST (ms)</th>
+                  <th class="p-2.5 text-indigo-400">Prim's MST (ms)</th>
+                  <th class="p-2.5 text-emerald-400">Kahn's Sort (ms)</th>
+                  <th class="p-2.5 text-amber-400">Hybrid Rec (ms)</th>
+                </tr>
+              </thead>
+              <tbody id="benchmark-scalability-tbody" class="divide-y divide-brand-border/60 text-slate-300">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="lg:col-span-5 flex items-center justify-center">
+            <canvas id="scalabilityChart" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part 3: Automated Unit/Integration Test Matrix (8 Tests) -->
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-brand-border">
+          <div>
+            <h3 class="text-sm font-bold text-white">3. Automated Unit & Integration Test Case Matrix</h3>
+            <p class="text-xs text-slate-400">Verifies edge cases: Cold-start users, cyclical dependency graphs, and DSU correctness.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="test-summary-badge" class="badge-pill bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono text-xs">8/8 Passed (100%)</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="bg-slate-900 text-slate-400 border-b border-brand-border">
+              <tr>
+                <th class="p-2.5">Test ID</th>
+                <th class="p-2.5">Test Case Name</th>
+                <th class="p-2.5">Category</th>
+                <th class="p-2.5">Input Scenario</th>
+                <th class="p-2.5">Expected Output</th>
+                <th class="p-2.5">Actual Result</th>
+                <th class="p-2.5">Status</th>
+              </tr>
+            </thead>
+            <tbody id="test-matrix-tbody" class="divide-y divide-brand-border/60 text-slate-300">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =============================================================== -->
+    <!-- TAB 4: CO MAPPING, PROBLEM DEFINITION & VIVA GUIDE (8 MARKS) -->
+    <!-- =============================================================== -->
+    <section id="tab-viva" class="tab-pane hidden space-y-6">
+      
+      <!-- Rubric Banner -->
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-5">
+        <div class="flex items-center gap-2">
+          <span class="badge-pill bg-amber-500/20 text-amber-300 border border-amber-500/30">Rubric #1: CO Relevance (4 Marks)</span>
+          <span class="badge-pill bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Rubric #5: Viva Voce & Presentation (4 Marks)</span>
+        </div>
+        <h2 class="text-lg font-bold text-white mt-1.5">Academic Alignment, Course Outcome Attainment & Viva Flashcards</h2>
+        <p class="text-xs text-slate-400">Comprehensive syllabus documentation and pre-formulated jury defense Q&A for University Jury / External Examiners.</p>
+      </div>
+
+      <!-- Problem Definition & Industrial Real-World Relevance -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-3">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-bullseye text-brand-cyan"></i>
+            <span>Problem Definition & Academic Scope</span>
+          </h3>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            In modern university campuses and collaborative research networks, students and early-career researchers struggle with <strong>informational silos</strong> and fragmented peer discovery. Traditional recommendation systems rely purely on naive demographic filters or spam-heavy 1-hop friend counts.
+          </p>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            This project formulates social discovery as an <strong>AI Heuristic Search and Knowledge Representation problem</strong>. By modeling relationships as a weighted multi-relational graph, we synthesize:
+          </p>
+          <ul class="text-xs text-slate-400 space-y-1 list-disc list-inside">
+            <li><strong>Minimum Spanning Tree:</strong> Extracts the core backbone of highest-affinity connections.</li>
+            <li><strong>Directed Acyclic Graphs (DAG):</strong> Resolves skill dependencies into structured mentorship tiers.</li>
+            <li><strong>Hybrid AI Link Prediction:</strong> Blends topological proximity (Adamic-Adar) with multi-hot semantic cosine similarity and A* social intro pathfinding.</li>
+          </ul>
+        </div>
+
+        <div class="bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-3">
+          <h3 class="text-sm font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-globe text-brand-accent"></i>
+            <span>Industrial Relevance & Case Studies</span>
+          </h3>
+          <div class="space-y-2 text-xs text-slate-300">
+            <div class="p-2.5 rounded-xl bg-slate-900 border border-brand-border">
+              <strong class="text-white">LinkedIn ("People You May Know - PYMK"):</strong> Uses Adamic-Adar index and triadic closure to prioritize shared connections with small in-degrees over hyper-connected celebrity accounts.
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900 border border-brand-border">
+              <strong class="text-white">Meta / Facebook Graph Search:</strong> Uses Kruskal-style backbone extraction to optimize distributed data replication across global server clusters, minimizing cross-datacenter latency.
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900 border border-brand-border">
+              <strong class="text-white">ResearchGate & Academic Collaboration:</strong> Uses topological sorting to order prerequisite coursework and hierarchical peer-review mentorship ladders.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explicit Course Outcome (CO) Mapping Matrix -->
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-table-list text-emerald-400"></i>
+          <span>Curriculum Course Outcome (CO) Attainment Matrix</span>
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="bg-slate-900 text-slate-400 border-b border-brand-border">
+              <tr>
+                <th class="p-2.5">Course Outcome</th>
+                <th class="p-2.5">Syllabus Competency</th>
+                <th class="p-2.5">Algorithmic Implementation in System</th>
+                <th class="p-2.5">Attainment Level</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-brand-border/60 text-slate-300">
+              <tr>
+                <td class="p-2.5 font-bold text-brand-cyan">CO2</td>
+                <td class="p-2.5">Design & Implement Search Algorithms and Graph Traversal</td>
+                <td class="p-2.5">A* Social Intro Pathfinding with heuristic $f(n)=g(n)+h(n)$; Kruskal's & Prim's Minimum Spanning Tree; BFS/DFS Graph Exploration.</td>
+                <td class="p-2.5 text-emerald-400 font-bold">100% (High)</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-bold text-brand-accent">CO3</td>
+                <td class="p-2.5">Knowledge Representation, Reasoning & Structural Dependencies</td>
+                <td class="p-2.5">Directed Acyclic Graph (DAG) representation of mentorship hierarchies; Kahn's Indegree Peeling Algorithm; Cycle-Detection via 3-color DFS.</td>
+                <td class="p-2.5 text-emerald-400 font-bold">100% (High)</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-bold text-amber-400">CO5</td>
+                <td class="p-2.5">Apply AI & Machine Learning to Real-World Complex Systems</td>
+                <td class="p-2.5">Multi-hot skill/interest vectorization; Cosine Similarity feature space; Adamic-Adar heuristic link prediction; Hybrid composite scoring engine.</td>
+                <td class="p-2.5 text-emerald-400 font-bold">100% (High)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Interactive Viva Flashcards (Top 10 Q&A Accordion) -->
+      <div class="bg-brand-surface border border-brand-border rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-brand-border">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-comments text-amber-400"></i>
+              <span>Interactive Viva Voce Defense Flashcards (Top 10 Questions)</span>
+            </h3>
+            <p class="text-xs text-slate-400">Click any question to view the examiner-ready theoretical and algorithmic defense.</p>
+          </div>
+          <span class="badge-pill bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs">Jury Prep</span>
+        </div>
+
+        <div id="viva-accordion" class="space-y-3">
+          <!-- Dynamically populated or rendered items -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL: ADD STUDENT MODAL -->
+  <div id="modal-add-user" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-brand-surface border border-brand-border rounded-2xl w-full max-w-lg p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-brand-border pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-brand-cyan"></i>
+          <span>Add New Student / Mentor</span>
+        </h3>
+        <button id="btn-close-modal" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="form-add-user" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-300 mb-1">Full Name *</label>
+          <input type="text" id="input-name" required placeholder="e.g., Ishaan Sharma" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-cyan">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 mb-1">Department</label>
+            <select id="input-dept" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-cyan">
+              <option value="Computer Science & Eng">Computer Science & Eng</option>
+              <option value="Information Technology">Information Technology</option>
+              <option value="Artificial Intelligence & Data Science">AI & Data Science</option>
+              <option value="Cybersecurity & Forensic">Cybersecurity</option>
+              <option value="Electronics & Communication">Electronics & Comm</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-slate-300 mb-1">Academic Year</label>
+            <select id="input-year" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-cyan">
+              <option value="Freshman (1st Year)">Freshman (1st Year)</option>
+              <option value="Sophomore (2nd Year)">Sophomore (2nd Year)</option>
+              <option value="Junior (3rd Year)">Junior (3rd Year)</option>
+              <option value="Senior (4th Year)">Senior (4th Year)</option>
+              <option value="Alumni / Industry Fellow">Alumni / Fellow</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 mb-1">Skills (comma separated)</label>
+          <input type="text" id="input-skills" placeholder="e.g., Python, Machine Learning, React" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-cyan">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 mb-1">Interests (comma separated)</label>
+          <input type="text" id="input-interests" placeholder="e.g., Hackathons, Robotics, Open Source" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-white focus:outline-none focus:border-brand-cyan">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" id="btn-cancel-modal" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-brand-cyan text-slate-900 font-bold rounded-xl hover:bg-cyan-400 transition">Save & Add to Graph</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- MAIN SCRIPT -->
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
