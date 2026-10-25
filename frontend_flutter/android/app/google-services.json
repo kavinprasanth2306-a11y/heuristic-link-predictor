@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "783991096982",
+    "project_id": "chat-app-bacfb",
+    "storage_bucket": "chat-app-bacfb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:783991096982:android:bb27ceabe85ae53a6224b7",
+        "android_client_info": {
+          "package_name": "com.cupidgraph.frontend_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "783991096982-538sqpbr613q3a8vc0nkad4521ci92fn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUaGSxLb3NwHkbAf160yLaeP_2hqVe3UM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "783991096982-538sqpbr613q3a8vc0nkad4521ci92fn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

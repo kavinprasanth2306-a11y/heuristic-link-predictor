@@ -10,7 +10,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isCheckingUpdate = false;
-  String _serverStatus = 'Connected';
   bool _isResetting = false;
 
   final List<String> _lifestyleTraits = [
@@ -40,13 +39,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF1E293B),
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Row(
             children: const [
-              Icon(Icons.system_update, color: Color(0xFFFF4458), size: 28),
+              Icon(Icons.system_update, color: Color(0xFFFF3366), size: 28),
               SizedBox(width: 10),
-              Text('Update Available', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              Text('Update Available', style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold)),
             ],
           ),
           content: Column(
@@ -55,24 +54,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(
                 'Version: v' + (updateInfo['latestVersion'] ?? '1.0.1').toString(),
-                style: const TextStyle(color: Color(0xFFFF4458), fontWeight: FontWeight.bold),
+                style: const TextStyle(color: Color(0xFFFF3366), fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 updateInfo['releaseNotes'] ?? 'Latest performance improvements and bug fixes.',
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                style: const TextStyle(color: Color(0xFF475569), fontSize: 13),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4458),
+                backgroundColor: const Color(0xFFFF3366),
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               onPressed: () async {
                 Navigator.pop(ctx);
@@ -87,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Your CupidGraph app is up to date! (v1.0.0)'),
+          content: Text('Your CupidGraph app is up to date! (v1.0.1)'),
           backgroundColor: Color(0xFF10B981),
         ),
       );
@@ -111,13 +111,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F19),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
-            backgroundColor: const Color(0xFF111827),
+            backgroundColor: Colors.white,
+            elevation: 1,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
@@ -126,8 +127,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ApiService.activeUserAvatar,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: const Color(0xFF1E293B),
-                      child: const Icon(Icons.person, size: 80, color: Colors.white30),
+                      color: const Color(0xFFE2E8F0),
+                      child: const Icon(Icons.person, size: 80, color: Color(0xFF94A3B8)),
                     ),
                   ),
                   Container(
@@ -137,8 +138,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          const Color(0xFF0B0F19).withValues(alpha: 0.8),
-                          const Color(0xFF0B0F19),
+                          Colors.white.withValues(alpha: 0.85),
+                          const Color(0xFFF8FAFC),
                         ],
                       ),
                     ),
@@ -151,10 +152,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         CircleAvatar(
-                          radius: 38,
-                          backgroundColor: const Color(0xFFFF4458),
+                          radius: 40,
+                          backgroundColor: const Color(0xFFFF3366),
                           child: CircleAvatar(
-                            radius: 35,
+                            radius: 37,
                             backgroundImage: NetworkImage(ApiService.activeUserAvatar),
                           ),
                         ),
@@ -169,7 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     child: Text(
                                       ApiService.activeUserName,
                                       style: const TextStyle(
-                                        color: Colors.white,
+                                        color: Color(0xFF0F172A),
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -177,13 +178,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  const Icon(Icons.verified, color: Color(0xFF38BDF8), size: 20),
+                                  const Icon(Icons.verified, color: Color(0xFF0284C7), size: 20),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 'User ID: ' + ApiService.activeUserId + ' ? Bengaluru, IN',
-                                style: const TextStyle(color: Colors.white60, fontSize: 13),
+                                style: const TextStyle(color: Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500),
                               ),
                             ],
                           ),
@@ -203,27 +204,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   // Vector & Gating Status Card
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: const [
-                            Icon(Icons.hub, color: Color(0xFFFF4458), size: 20),
+                            Icon(Icons.hub, color: Color(0xFFFF3366), size: 22),
                             SizedBox(width: 8),
                             Text(
                               '10-D Vector Status: Embedded',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                              style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 15),
                             ),
                             Spacer(),
                             Chip(
-                              label: Text('CO2 ? CO3', style: TextStyle(fontSize: 10, color: Colors.white)),
-                              backgroundColor: Color(0xFF374151),
+                              label: Text('CO2 ? CO3', style: TextStyle(fontSize: 10, color: Color(0xFF475569))),
+                              backgroundColor: Color(0xFFF1F5F9),
                               padding: EdgeInsets.zero,
                             ),
                           ],
@@ -236,72 +244,83 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             return Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF0F172A),
+                                color: const Color(0xFFFFF1F2),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFFFF4458).withValues(alpha: 0.3)),
+                                border: Border.all(color: const Color(0xFFFF3366).withValues(alpha: 0.2)),
                               ),
-                              child: Text(t, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                              child: Text(t, style: const TextStyle(color: Color(0xFFBE123C), fontSize: 11, fontWeight: FontWeight.w600)),
                             );
                           }).toList(),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
-                  // Lifestyle & Interests
-                  const Text('Lifestyle & Passions', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  // Lifestyle & Passions
+                  const Text('Lifestyle & Passions', style: TextStyle(color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: _lifestyleTraits.map((t) {
                       return Chip(
-                        label: Text(t, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                        backgroundColor: const Color(0xFF1E293B),
-                        avatar: const Icon(Icons.tag, size: 14, color: Color(0xFFFF4458)),
+                        label: Text(t, style: const TextStyle(color: Color(0xFF334155), fontSize: 12, fontWeight: FontWeight.w500)),
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFFE2E8F0)),
+                        avatar: const Icon(Icons.tag, size: 14, color: Color(0xFFFF3366)),
                       );
                     }).toList(),
                   ),
                   const SizedBox(height: 24),
 
-                  // System & OTA Auto-Update Management
-                  const Text('App & Backend System', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  // System & Backend Controls
+                  const Text('App & Backend System', style: TextStyle(color: Color(0xFF0F172A), fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
 
-                  ListTile(
-                    tileColor: const Color(0xFF1E293B),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    leading: const Icon(Icons.cloud_sync, color: Color(0xFF38BDF8)),
-                    title: const Text('Backend Server URL', style: TextStyle(color: Colors.white, fontSize: 14)),
-                    subtitle: Text(ApiService.baseUrl, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                    trailing: const Icon(Icons.circle, color: Color(0xFF10B981), size: 10),
-                  ),
-                  const SizedBox(height: 10),
-
-                  ListTile(
-                    tileColor: const Color(0xFF1E293B),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    leading: const Icon(Icons.system_update_alt, color: Color(0xFFFF4458)),
-                    title: const Text('Check for OTA Updates', style: TextStyle(color: Colors.white, fontSize: 14)),
-                    subtitle: const Text('Current: v1.0.0 (Build 1)', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                    trailing: _isCheckingUpdate
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFF4458)))
-                        : const Icon(Icons.chevron_right, color: Colors.white54),
-                    onTap: _isCheckingUpdate ? null : _triggerManualUpdateCheck,
-                  ),
-                  const SizedBox(height: 10),
-
-                  ListTile(
-                    tileColor: const Color(0xFF1E293B),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    leading: const Icon(Icons.refresh, color: Colors.amberAccent),
-                    title: const Text('Reset Graph Session', style: TextStyle(color: Colors.white, fontSize: 14)),
-                    subtitle: const Text('Clear swipes, likes & re-initialize datastore', style: TextStyle(color: Colors.white54, fontSize: 12)),
-                    trailing: _isResetting
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.amberAccent))
-                        : const Icon(Icons.arrow_forward_ios, color: Colors.white38, size: 14),
-                    onTap: _isResetting ? null : _handleResetDatastore,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.cloud_sync, color: Color(0xFF0284C7)),
+                          title: const Text('Backend Server URL', style: TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w600)),
+                          subtitle: Text(ApiService.baseUrl, style: const TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+                          trailing: const Icon(Icons.circle, color: Color(0xFF10B981), size: 10),
+                        ),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                        ListTile(
+                          leading: const Icon(Icons.system_update_alt, color: Color(0xFFFF3366)),
+                          title: const Text('Check for OTA Updates', style: TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w600)),
+                          subtitle: const Text('Current: v1.0.1 (Build 2)', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+                          trailing: _isCheckingUpdate
+                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFF3366)))
+                              : const Icon(Icons.chevron_right, color: Color(0xFF94A3B8)),
+                          onTap: _isCheckingUpdate ? null : _triggerManualUpdateCheck,
+                        ),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                        ListTile(
+                          leading: const Icon(Icons.refresh, color: Color(0xFFD97706)),
+                          title: const Text('Reset Graph Session', style: TextStyle(color: Color(0xFF0F172A), fontSize: 14, fontWeight: FontWeight.w600)),
+                          subtitle: const Text('Clear swipes, likes & re-initialize datastore', style: TextStyle(color: Color(0xFF64748B), fontSize: 12)),
+                          trailing: _isResetting
+                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFD97706)))
+                              : const Icon(Icons.arrow_forward_ios, color: Color(0xFF94A3B8), size: 14),
+                          onTap: _isResetting ? null : _handleResetDatastore,
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 30),
                 ],

@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/profile_screen.dart';
 import 'services/api_service.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +9,15 @@ import 'screens/graph_visualizer_screen.dart';
 import 'screens/testing_dashboard_screen.dart';
 import 'screens/viva_prep_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint("Firebase init note: $e");
+  }
   runApp(const CupidGraphApp());
 }
 
@@ -20,10 +30,28 @@ class CupidGraphApp extends StatelessWidget {
       title: 'CupidGraph | AI Matchmaking Engine',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0B0F19),
-        primaryColor: const Color(0xFFFF4458),
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        primaryColor: const Color(0xFFFF3366),
         fontFamily: 'Roboto',
+        cardColor: Colors.white,
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFFFF3366),
+          secondary: Color(0xFF6366F1),
+          surface: Colors.white,
+          onSurface: Color(0xFF0F172A),
+          onPrimary: Colors.white,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Color(0xFF0F172A),
+          elevation: 0,
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Color(0xFF0F172A)),
+          bodyMedium: TextStyle(color: Color(0xFF334155)),
+          titleLarge: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold),
+        ),
       ),
       home: const MainGatekeeper(),
     );
@@ -170,21 +198,28 @@ class _MainShellScreenState extends State<MainShellScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F19),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF111827),
-          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+          border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.05))),
         ),
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: (index) => setState(() => _selectedIndex = index),
-          backgroundColor: Colors.transparent,
+          backgroundColor: Colors.white,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFFFF4458),
-          unselectedItemColor: Colors.white38,
+          selectedItemColor: const Color(0xFFFF3366),
+          unselectedItemColor: const Color(0xFF94A3B8),
           selectedFontSize: 11,
           unselectedFontSize: 11,
           items: const [

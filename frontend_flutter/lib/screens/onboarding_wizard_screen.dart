@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../services/api_service.dart';
-
 class OnboardingWizardScreen extends StatefulWidget {
   final VoidCallback onOnboardingComplete;
 
@@ -200,7 +201,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F19),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -212,7 +213,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white70, size: 18),
+                      icon: const Icon(Icons.arrow_back_ios, color: const Color(0xFF475569), size: 18),
                       onPressed: () => setState(() => _currentStep--),
                     ),
                     Text(
@@ -276,13 +277,13 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
               )
             ],
           ),
-          child: const Icon(Icons.favorite, color: Colors.white, size: 45),
+          child: const Icon(Icons.favorite, color: const Color(0xFF0F172A), size: 45),
         ),
         const SizedBox(height: 20),
         const Text(
           "CupidGraph",
           style: TextStyle(
-            color: Colors.white,
+            color: const Color(0xFF0F172A),
             fontSize: 32,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.5,
@@ -300,7 +301,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
           child: Text(
             "Powered by 10-D Vector Cosine Similarity, Kruskal's MST Group Optimization, and Kahn's Milestone Sorting (CO2, CO3, CO5).",
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.4),
+            style: TextStyle(color: const Color(0xFF64748B), fontSize: 12, height: 1.4),
           ),
         ),
         const SizedBox(height: 48),
@@ -328,7 +329,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
                   color: Color(0xFF4285F4),
                 ),
                 child: const Center(
-                  child: Text("G", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  child: Text("G", style: TextStyle(color: const Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 13)),
                 ),
               ),
               const SizedBox(width: 14),
@@ -342,7 +343,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
         const SizedBox(height: 16),
         const Text(
           "Signing in as darkin2306@gmail.com",
-          style: TextStyle(color: Colors.white38, fontSize: 11),
+          style: TextStyle(color: const Color(0xFF94A3B8), fontSize: 11),
         ),
       ],
     );
@@ -358,12 +359,12 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
       children: [
         Text(
           q['title'],
-          style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: const Color(0xFF0F172A), fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 6),
         Text(
           q['desc'],
-          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          style: const TextStyle(color: const Color(0xFF475569), fontSize: 14),
         ),
         const SizedBox(height: 24),
 
@@ -394,8 +395,8 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(q['minLabel'], style: const TextStyle(color: Colors.white54, fontSize: 12)),
-                      Text(q['maxLabel'], style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                      Text(q['minLabel'], style: const TextStyle(color: const Color(0xFF64748B), fontSize: 12)),
+                      Text(q['maxLabel'], style: const TextStyle(color: const Color(0xFF64748B), fontSize: 12)),
                     ],
                   ),
                 ),
@@ -484,12 +485,12 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
       children: [
         const Text(
           "Profile Gating & Photo Verification",
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(color: const Color(0xFF0F172A), fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
         const Text(
           "Select at least 1 photo to activate your node in the CupidGraph network.",
-          style: TextStyle(color: Colors.white60, fontSize: 12),
+          style: TextStyle(color: const Color(0xFF64748B), fontSize: 12),
         ),
         const SizedBox(height: 16),
 
@@ -524,7 +525,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
 
         const Text(
           "Choose verified photo avatar preset:",
-          style: TextStyle(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.bold),
+          style: TextStyle(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
 
@@ -569,7 +570,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF141926),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -578,7 +579,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
                     const SizedBox(height: 4),
                     Text(
                       "[${_vector10d.map((v) => v < 0 ? '0.50' : v.toStringAsFixed(2)).join(', ')}]",
-                      style: const TextStyle(color: Colors.white70, fontSize: 10, fontFamily: 'monospace'),
+                      style: const TextStyle(color: const Color(0xFF475569), fontSize: 10, fontFamily: 'monospace'),
                     ),
                   ],
                 ),
@@ -599,7 +600,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
             ),
             onPressed: (_selectedAvatar.isNotEmpty && !_isSubmitting) ? _submitOnboarding : null,
             child: _isSubmitting
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: const Color(0xFF0F172A), strokeWidth: 2))
                 : const Text("Enter CupidGraph Network", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           ),
         ),
@@ -612,7 +613,7 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
       margin: const EdgeInsets.symmetric(vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
+        color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -623,8 +624,8 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(color: Colors.white38, fontSize: 10)),
-                Text(value, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(label, style: const TextStyle(color: const Color(0xFF94A3B8), fontSize: 10)),
+                Text(value, style: const TextStyle(color: const Color(0xFF0F172A), fontSize: 12, fontWeight: FontWeight.bold)),
               ],
             ),
           ),

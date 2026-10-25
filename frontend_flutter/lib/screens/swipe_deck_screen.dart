@@ -93,7 +93,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
               const SizedBox(height: 6),
               Text(
                 "You and ${profile.name} mutually aligned!",
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                style: const TextStyle(color: const Color(0xFF334155), fontSize: 13),
               ),
               const SizedBox(height: 20),
               // Dual avatar circles
@@ -248,7 +248,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
             const SizedBox(height: 16),
             const Text(
               "HYBRID ALGORITHMIC BREAKDOWN (CO3 & CO5):",
-              style: TextStyle(color: Colors.white38, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+              style: TextStyle(color: const Color(0xFF94A3B8), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
             ),
             const SizedBox(height: 10),
             _metricRow("Profile Vector Cosine Similarity", "${(profile.cosineSimilarity * 100).toInt()}%", Icons.interests),
@@ -262,7 +262,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
               children: profile.explainableBadges.map((badge) {
                 return Chip(
                   label: Text(badge, style: const TextStyle(fontSize: 11, color: Colors.white)),
-                  backgroundColor: const Color(0xFF1E293B),
+                  backgroundColor: Colors.white,
                   side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                 );
               }).toList(),
@@ -282,9 +282,9 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: Colors.white60),
+              Icon(icon, size: 16, color: const Color(0xFF475569)),
               const SizedBox(width: 8),
-              Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              Text(label, style: const TextStyle(color: const Color(0xFF334155), fontSize: 12)),
             ],
           ),
           Text(value, style: const TextStyle(color: Color(0xFF00F0FF), fontWeight: FontWeight.bold, fontSize: 12)),
@@ -324,7 +324,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                     ? "Phone cannot connect to Flask API at ${ApiService.baseUrl}.\nMake sure 'python app.py' is running on your PC and both devices are on the same Wi-Fi."
                     : "Check back later or reset the demo dataset.",
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white54, fontSize: 12, height: 1.4),
+                style: const TextStyle(color: const Color(0xFF64748B), fontSize: 12, height: 1.4),
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
@@ -375,15 +375,15 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                           children: [
                             Text(
                               "${ApiService.activeUserName} (You)",
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(color: const Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 13),
                             ),
-                            Text("${_candidates.length - _currentIndex} profiles remaining", style: const TextStyle(color: Colors.white38, fontSize: 10)),
+                            Text("${_candidates.length - _currentIndex} profiles remaining", style: const TextStyle(color: const Color(0xFF94A3B8), fontSize: 10)),
                           ],
                         ),
                       ],
                     ),
                     IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white70),
+                      icon: const Icon(Icons.refresh, color: const Color(0xFF334155)),
                       onPressed: _loadFeed,
                       tooltip: "Refresh Feed",
                     ),
@@ -434,7 +434,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                                 profile.avatar,
                                 fit: BoxFit.cover,
                                 errorBuilder: (ctx, err, stack) => Container(
-                                  color: const Color(0xFF1E293B),
+                                  color: Colors.white,
                                   child: const Icon(Icons.person, size: 80, color: Colors.white24),
                                 ),
                               ),
@@ -479,7 +479,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                                       const SizedBox(width: 6),
                                       Text(
                                         "${profile.matchScore}% Match",
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                        style: const TextStyle(color: const Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 13),
                                       ),
                                     ],
                                   ),
@@ -542,9 +542,9 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        const Icon(Icons.location_on, color: Colors.white54, size: 14),
+                                        const Icon(Icons.location_on, color: const Color(0xFF64748B), size: 14),
                                         const SizedBox(width: 4),
-                                        Text(profile.location, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                        Text(profile.location, style: const TextStyle(color: const Color(0xFF334155), fontSize: 12)),
                                         const SizedBox(width: 12),
                                         const Icon(Icons.timeline, color: Colors.amberAccent, size: 14),
                                         const SizedBox(width: 4),
@@ -556,7 +556,7 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                                       profile.bio,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.3),
+                                      style: const TextStyle(color: const Color(0xFF334155), fontSize: 13, height: 1.3),
                                     ),
                                     const SizedBox(height: 12),
                                     // Tags
@@ -603,9 +603,9 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                     // Pass Button
                     FloatingActionButton(
                       heroTag: 'pass_btn',
-                      backgroundColor: const Color(0xFF1E293B),
+                      backgroundColor: Colors.white,
                       onPressed: () => _handleSwipe('pass'),
-                      child: const Icon(Icons.close, color: Colors.white60, size: 30),
+                      child: const Icon(Icons.close, color: const Color(0xFF475569), size: 30),
                     ),
 
                     // Why Match? (XAI)
