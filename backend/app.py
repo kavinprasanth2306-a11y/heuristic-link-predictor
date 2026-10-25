@@ -170,6 +170,10 @@ def record_swipe():
     if target_id not in profiles_map:
         return jsonify({"status": "error", "message": "Target profile not found"}), 404
 
+    # Robust fallback for liker_id if not yet in profiles_map
+    if liker_id not in profiles_map:
+        liker_id = DATASTORE["profiles"][0]["id"]
+
     USER_LIKES.add((liker_id, target_id))
 
     is_match = False

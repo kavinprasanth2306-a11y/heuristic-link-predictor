@@ -1,3 +1,4 @@
+import 'screens/profile_screen.dart';
 import 'services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'screens/onboarding_wizard_screen.dart';
@@ -70,6 +71,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
     GraphVisualizerScreen(),
     TestingDashboardScreen(),
     VivaPrepScreen(),
+    ProfileScreen(),
   ];
 
   @override
@@ -188,19 +190,23 @@ class _MainShellScreenState extends State<MainShellScreen> {
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.style),
-              label: 'Swipe Feed',
+              label: 'Feed',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.hub),
-              label: 'Graph Engine',
+              label: 'Graphs',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.analytics),
-              label: 'Test Suite (4M)',
+              label: 'Tests',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.school),
-              label: 'CO & Viva (8M)',
+              label: 'Viva',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
             ),
           ],
         ),
