@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/onboarding_wizard_screen.dart';
 import 'screens/swipe_deck_screen.dart';
 import 'screens/graph_visualizer_screen.dart';
 import 'screens/testing_dashboard_screen.dart';
@@ -22,8 +23,33 @@ class CupidGraphApp extends StatelessWidget {
         primaryColor: const Color(0xFFFF4458),
         fontFamily: 'Roboto',
       ),
-      home: const MainShellScreen(),
+      home: const MainGatekeeper(),
     );
+  }
+}
+
+class MainGatekeeper extends StatefulWidget {
+  const MainGatekeeper({super.key});
+
+  @override
+  State<MainGatekeeper> createState() => _MainGatekeeperState();
+}
+
+class _MainGatekeeperState extends State<MainGatekeeper> {
+  bool _isOnboarded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isOnboarded) {
+      return OnboardingWizardScreen(
+        onOnboardingComplete: () {
+          setState(() {
+            _isOnboarded = true;
+          });
+        },
+      );
+    }
+    return const MainShellScreen();
   }
 }
 
@@ -52,7 +78,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: const Color(0xFF111827),
-          border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
+          border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
         ),
         child: BottomNavigationBar(
           currentIndex: _selectedIndex,
