@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'screens/profile_screen.dart';
 import 'services/api_service.dart';
@@ -7,7 +8,7 @@ import 'screens/onboarding_wizard_screen.dart';
 import 'screens/swipe_deck_screen.dart';
 import 'screens/graph_visualizer_screen.dart';
 import 'screens/testing_dashboard_screen.dart';
-import 'screens/viva_prep_screen.dart';
+import 'screens/conversations_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,9 +68,50 @@ class MainGatekeeper extends StatefulWidget {
 
 class _MainGatekeeperState extends State<MainGatekeeper> {
   bool _isOnboarded = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSavedSession();
+  }
+
+  Future<void> _checkSavedSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
+    final savedUserId = prefs.getString('user_id');
+    final savedName = prefs.getString('user_name');
+    final savedEmail = prefs.getString('user_email');
+    final savedAvatar = prefs.getString('user_avatar');
+
+    if (isLoggedIn && savedUserId != null && savedUserId.isNotEmpty) {
+      ApiService.activeUserId = savedUserId;
+      if (savedName != null) ApiService.activeUserName = savedName;
+      if (savedEmail != null) ApiService.activeUserEmail = savedEmail;
+      if (savedAvatar != null) ApiService.activeUserAvatar = savedAvatar;
+      setState(() {
+        _isOnboarded = true;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isOnboarded = false;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF8FAFC),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFFFF3366)),
+        ),
+      );
+    }
+
     if (!_isOnboarded) {
       return OnboardingWizardScreen(
         onOnboardingComplete: () {
@@ -96,9 +138,9 @@ class _MainShellScreenState extends State<MainShellScreen> {
 
   final List<Widget> _screens = const [
     SwipeDeckScreen(),
+    ConversationsScreen(),
     GraphVisualizerScreen(),
     TestingDashboardScreen(),
-    VivaPrepScreen(),
     ProfileScreen(),
   ];
 
@@ -228,16 +270,16 @@ class _MainShellScreenState extends State<MainShellScreen> {
               label: 'Feed',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.chat_bubble_outline),
+              label: 'Messages',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.hub),
               label: 'Graphs',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.analytics),
               label: 'Tests',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.school),
-              label: 'Viva',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),

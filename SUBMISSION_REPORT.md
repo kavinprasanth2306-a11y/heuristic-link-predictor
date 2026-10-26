@@ -27,7 +27,7 @@ Conventional dating platforms rely on opaque recommendation algorithms and shall
 
 ### B. Automated Verification & Welcome Receipt (SMTP Mailer)
 - Upon profile completion, the backend triggers an automated, styled HTML welcome email via SMTP:
-  - **Sender:** `darkin2306@gmail.com`
+  - **Sender:** `noreply@cupidgraph.ai`
   - **Contents:** Unique CupidGraph Match ID (`CG-7829-AI`), baseline 10-D compatibility vector embedding, and community safety guidelines.
   - **Fallback:** Includes graceful mock logging if SMTP credentials are not configured in local evaluation environments.
 

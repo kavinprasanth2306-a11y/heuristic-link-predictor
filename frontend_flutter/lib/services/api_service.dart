@@ -7,11 +7,12 @@ class ApiService {
   // Current active user ID
   static String activeUserId = 'p1';
   static String activeUserName = 'Aarav Sharma';
+  static String activeUserEmail = 'aarav.sharma@cupidgraph.ai';
   static String activeUserAvatar = 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=600';
 
   // Primary IP from your Wi-Fi interface (for physical Android phone & local network)
   // Also supports 10.0.2.2 (Android Emulator) and 127.0.0.1 (Web / Windows)
-  static const String lanHost = '192.168.1.40';
+  static const String lanHost = '10.141.9.3';
   static const int port = 5000;
 
   // Primary URL using your machine's Wi-Fi LAN IP
@@ -20,14 +21,34 @@ class ApiService {
 
   // Candidate base URLs to query in fallback order
   static final List<String> candidateUrls = [
-    'http://192.168.1.40:5000/api',  // Physical Android device over Wi-Fi
-    'http://10.0.2.2:5000/api',      // Android Emulator host loopback
-    'http://127.0.0.1:5000/api',     // Web & Desktop localhost
-    'http://localhost:5000/api',     // Standard localhost
+    'http://10.141.9.3:5000/api',   // Physical Android device over Wi-Fi
+    'http://10.0.2.2:5000/api',     // Android Emulator host loopback
+    'http://127.0.0.1:5000/api',    // Web & Desktop localhost
+    'http://localhost:5000/api',    // Standard localhost
   ];
 
   static void setCustomBaseUrl(String url) {
     baseUrl = url;
+  }
+
+  // Check if account already exists by email to skip 10 questions
+  static Future<Map<String, dynamic>> checkAccount(String email) async {
+    try {
+      final response = await _postWithFallback('/auth/check', {'email': email});
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success' && data['exists'] == true && data['user'] != null) {
+          activeUserId = data['user']['id'] ?? activeUserId;
+          activeUserName = data['user']['name'] ?? activeUserName;
+          activeUserEmail = data['user']['email'] ?? email;
+          activeUserAvatar = data['user']['avatar'] ?? activeUserAvatar;
+        }
+        return data;
+      }
+      return {'exists': false};
+    } catch (e) {
+      return {'exists': false};
+    }
   }
 
   // Complete onboarding wizard & submit 10-D compatibility vector + photo
@@ -40,6 +61,7 @@ class ApiService {
     required String bio,
     required String location,
     required List<double> vector10d,
+    List<String> photos = const [],
   }) async {
     try {
       final response = await _postWithFallback(
@@ -53,18 +75,91 @@ class ApiService {
           'bio': bio,
           'location': location,
           'vector_10d': vector10d,
+          'photos': photos.isNotEmpty ? photos : [avatar],
         },
       );
       final data = json.decode(response.body);
       if (data['status'] == 'success' && data['user'] != null) {
-        activeUserId = data['user']['id'] ?? 'p1';
+        activeUserId = data['user']['id'] ?? 'user_custom';
         activeUserName = data['user']['name'] ?? name;
+        activeUserEmail = data['user']['email'] ?? email;
         activeUserAvatar = data['user']['avatar'] ?? avatar;
       }
       return data;
     } catch (e) {
       lastError = e.toString();
       return {'status': 'error', 'message': e.toString()};
+    }
+  }
+
+  // Update profile details, photos, and 10-D compatibility vector answers
+  static Future<bool> updateProfile({
+    String? name,
+    String? bio,
+    String? location,
+    String? avatar,
+    List<String>? photos,
+    List<double>? vector10d,
+    int? age,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {
+        'user_id': activeUserId,
+      };
+      if (name != null) body['name'] = name;
+      if (bio != null) body['bio'] = bio;
+      if (location != null) body['location'] = location;
+      if (avatar != null) body['avatar'] = avatar;
+      if (photos != null) body['photos'] = photos;
+      if (vector10d != null) body['vector_10d'] = vector10d;
+      if (age != null) body['age'] = age;
+
+      final res = await _postWithFallback('/profile/update', body);
+      if (res.statusCode == 200) {
+        if (name != null) activeUserName = name;
+        if (avatar != null) activeUserAvatar = avatar;
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Community Feed Posts
+  static Future<List<Map<String, dynamic>>> getPosts() async {
+    try {
+      final res = await _getWithFallback('/posts');
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body);
+        final List list = data['posts'] ?? [];
+        return list.map((p) => Map<String, dynamic>.from(p)).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<bool> createPost(String content, {String imageUrl = ''}) async {
+    try {
+      final res = await _postWithFallback('/posts/create', {
+        'user_id': activeUserId,
+        'content': content,
+        'image_url': imageUrl,
+      });
+      return res.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  static Future<bool> likePost(int postId) async {
+    try {
+      final res = await _postWithFallback('/posts/$postId/like', {});
+      return res.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -84,6 +179,19 @@ class ApiService {
     } catch (e) {
       lastError = e.toString();
       return [];
+    }
+  }
+
+  // Fetch single profile details with A* and cosine breakdown
+  static Future<Map<String, dynamic>?> getProfileDetails(String profileId) async {
+    try {
+      final response = await _getWithFallback('/profile/$profileId?active_user_id=$activeUserId');
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 
@@ -110,6 +218,51 @@ class ApiService {
     } catch (e) {
       lastError = e.toString();
       return {'status': 'error', 'message': e.toString()};
+    }
+  }
+
+  // =====================================================================
+  // MESSAGING & CHAT ENDPOINTS
+  // =====================================================================
+  static Future<Map<String, dynamic>> getConversations() async {
+    try {
+      final response = await _getWithFallback('/messages/conversations?user_id=$activeUserId');
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+      return {'conversations': [], 'matches': []};
+    } catch (e) {
+      return {'conversations': [], 'matches': []};
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getMessagesWithPartner(String partnerId) async {
+    try {
+      final response = await _getWithFallback('/messages/$partnerId?user_id=$activeUserId');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final List list = data['messages'] ?? [];
+        return list.map((m) => Map<String, dynamic>.from(m)).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  static Future<bool> sendMessage(String partnerId, String text) async {
+    try {
+      final response = await _postWithFallback(
+        '/messages/send',
+        {
+          'sender_id': activeUserId,
+          'receiver_id': partnerId,
+          'text': text,
+        },
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -166,25 +319,23 @@ class ApiService {
 
   // Multi-target fallback network handler
   static Future<http.Response> _getWithFallback(String path) async {
-    // Try current baseUrl first
     try {
       final res = await http.get(Uri.parse('$baseUrl$path')).timeout(const Duration(seconds: 4));
       if (res.statusCode == 200) return res;
     } catch (_) {}
 
-    // Fall back through candidate IP addresses
     for (final host in candidateUrls) {
       if (host == baseUrl) continue;
       try {
         final res = await http.get(Uri.parse('$host$path')).timeout(const Duration(seconds: 4));
         if (res.statusCode == 200) {
-          baseUrl = host; // Pin working host
+          baseUrl = host;
           return res;
         }
       } catch (_) {}
     }
 
-    throw Exception('Cannot reach CupidGraph backend at $baseUrl. Check if python app.py is running on port 5000 and phone is on same Wi-Fi.');
+    throw Exception('Cannot reach CupidGraph backend at $baseUrl. Check if python app.py is running on port 5000.');
   }
 
   static Future<http.Response> _postWithFallback(String path, Map<String, dynamic> body) async {

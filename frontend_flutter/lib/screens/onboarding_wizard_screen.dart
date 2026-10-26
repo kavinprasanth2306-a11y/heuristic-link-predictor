@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 class OnboardingWizardScreen extends StatefulWidget {
   final VoidCallback onOnboardingComplete;
@@ -14,15 +14,69 @@ class OnboardingWizardScreen extends StatefulWidget {
 class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
   int _currentStep = 0; // 0 = Google Auth Landing, 1 to 10 = Compatibility Questions, 11 = Profile & Photo Gate
   bool _isSubmitting = false;
+  bool _isGoogleSigningIn = false;
 
-  // Google User Info Mock
-  final String _name = "Kavin Prasanth";
-  final String _email = "darkin2306@gmail.com";
+  // Google User Info
+  String _name = "";
+  String _email = "";
   String _selectedAvatar = "";
   final int _age = 21;
   final String _gender = "Male";
   final String _bio = "AI student & developer passionate about Graph Neural Networks, hackathons, and indie coffee spots.";
   final String _city = "Bengaluru, India (12.9716° N, 77.5946° E)";
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isGoogleSigningIn = true);
+    try {
+      final googleSignIn = GoogleSignIn.instance;
+      await googleSignIn.initialize();
+      final account = await googleSignIn.authenticate();
+      setState(() {
+        _name = account.displayName ?? _name;
+        _email = account.email;
+        if (account.photoUrl != null && account.photoUrl!.isNotEmpty) {
+          _selectedAvatar = account.photoUrl!;
+        }
+      });
+      ApiService.activeUserName = _name;
+      ApiService.activeUserEmail = _email;
+      if (_selectedAvatar.isNotEmpty) {
+        ApiService.activeUserAvatar = _selectedAvatar;
+      }
+
+      // Check if user already exists in backend SQLite database
+      final checkRes = await ApiService.checkAccount(_email);
+      if (checkRes['exists'] == true && checkRes['user'] != null) {
+        // Save session locally in SharedPreferences to stay logged in forever
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_id', checkRes['user']['id']);
+        await prefs.setString('user_name', checkRes['user']['name']);
+        await prefs.setString('user_email', checkRes['user']['email']);
+        await prefs.setString('user_avatar', checkRes['user']['avatar']);
+        await prefs.setBool('is_logged_in', true);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Welcome back, ${checkRes['user']['name']}!"),
+              backgroundColor: const Color(0xFF10B981),
+            ),
+          );
+          widget.onOnboardingComplete();
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint("Google Sign-in graceful fallback: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleSigningIn = false;
+          _currentStep = 1;
+        });
+      }
+    }
+  }
 
   // 10-D Vector answers
   final List<double> _vector10d = List.filled(10, -1.0);
@@ -185,15 +239,29 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
     setState(() => _isSubmitting = false);
 
     if (res['status'] == 'success') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Welcome email dispatched to $_email!"),
-          backgroundColor: Colors.green,
-        ),
-      );
-      widget.onOnboardingComplete();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_id', res['user']?['id'] ?? ApiService.activeUserId);
+      await prefs.setString('user_name', _name);
+      await prefs.setString('user_email', _email);
+      await prefs.setString('user_avatar', _selectedAvatar);
+      await prefs.setBool('is_logged_in', true);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Welcome email dispatched to $_email!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        widget.onOnboardingComplete();
+      }
     } else {
-      // Allow progression anyway for offline presentation
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_id', ApiService.activeUserId);
+      await prefs.setString('user_name', _name);
+      await prefs.setString('user_email', _email);
+      await prefs.setString('user_avatar', _selectedAvatar);
+      await prefs.setBool('is_logged_in', true);
       widget.onOnboardingComplete();
     }
   }
@@ -315,35 +383,39 @@ class _OnboardingWizardScreenState extends State<OnboardingWizardScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
             elevation: 4,
           ),
-          onPressed: () {
-            setState(() => _currentStep = 1);
-          },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 22,
-                height: 22,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF4285F4),
+          onPressed: _isGoogleSigningIn ? null : _handleGoogleSignIn,
+          child: _isGoogleSigningIn
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(color: Color(0xFF4285F4), strokeWidth: 2.5),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 22,
+                      height: 22,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Color(0xFF4285F4),
+                      ),
+                      child: const Center(
+                        child: Text("G", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    const Text(
+                      "Continue with Google",
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
-                child: const Center(
-                  child: Text("G", style: TextStyle(color: const Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 13)),
-                ),
-              ),
-              const SizedBox(width: 14),
-              const Text(
-                "Continue with Google",
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
         ),
         const SizedBox(height: 16),
-        const Text(
-          "Signing in as darkin2306@gmail.com",
-          style: TextStyle(color: const Color(0xFF94A3B8), fontSize: 11),
+        Text(
+          "Signed in as $_email",
+          style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
         ),
       ],
     );

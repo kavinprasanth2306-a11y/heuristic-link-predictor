@@ -7,17 +7,6 @@ vector_10d, mutual_connections, readiness_stage, location, avatar
 
 import copy
 
-# 10 Dimensions in the vector:
-# [0] Weekend Vibe (0.0 to 1.0)
-# [1] Social Battery (0.0=Deep Introvert, 1.0=Extreme Extrovert)
-# [2] Relationship Goal (0.0=Casual, 1.0=Long-term)
-# [3] Communication Style (0.0=Async/Memes, 1.0=Instant/Calls)
-# [4] Sleep Schedule (0.0=Early Bird, 1.0=Night Owl)
-# [5] Fitness Activity (0.0=Couch, 1.0=Daily Athletics)
-# [6] Travel Mindset (0.0=Staycation, 1.0=Spontaneous Backpacker)
-# [7] Curiosity Spark (0.0=Pop Culture, 1.0=Tech/Philosophy)
-# [8] Conflict Resolution (0.0=Space/Cool-off, 1.0=Immediate Talk)
-# [9] Pet Affinity (0.0=Neither, 1.0=Dog/Cat Lover)
 
 INITIAL_PROFILES = [
     {

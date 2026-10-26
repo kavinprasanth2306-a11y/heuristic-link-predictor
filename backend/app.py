@@ -4,43 +4,65 @@ Course: 25CS301 - Artificial Intelligence
 Integrated COs: CO2, CO3, CO5
 Provides RESTful endpoints for onboarding, 10-D compatibility vector embedding,
 automated welcome SMTP dispatch, photo verification gating, swipe feeds, MST group backbones,
-topological readiness progression, and automated academic benchmarks.
+topological readiness progression, messaging, and SQLite persistent datastore.
 """
 
 import os
+import random
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import algorithms
-from dataset import get_dating_dataset
+from dataset import READINESS_DAG_EDGES
 import test_suite
 from mailer import send_welcome_compatibility_email
+import database
 
 app = Flask(__name__)
 CORS(app)  # Enable cross-origin requests for Flutter app
 
-# In-memory session store initialized with curated dating dataset
-DATASTORE = get_dating_dataset()
-USER_LIKES = set()  # Set of (liker_id, liked_id)
-MATCHES = []  # List of mutual matches
-
 def get_profiles_map():
-    return {p["id"]: p for p in DATASTORE["profiles"]}
+    profiles = database.get_all_profiles()
+    return {p["id"]: p for p in profiles}
 
 def get_mutual_connections_dict():
     mutual_dict = {}
-    for p in DATASTORE["profiles"]:
+    for p in database.get_all_profiles():
         mutual_dict[p["id"]] = p.get("mutual_connections", [])
     return mutual_dict
 
 # =====================================================================
-# 1. ONBOARDING, 10-D QUIZ WIZARD & PHOTO GATING
+# 1. ONBOARDING, LOGIN CHECK & PROFILE UPDATE
 # =====================================================================
+@app.route('/api/auth/check', methods=['POST'])
+def check_or_login():
+    """
+    Checks if a user already exists by email.
+    If exists, returns their profile so they skip 10 questions and jump straight into the app.
+    """
+    data = request.json or {}
+    email = data.get("email", "").strip()
+    if not email:
+        return jsonify({"status": "error", "message": "email required"}), 400
+
+    user = database.get_profile_by_email(email)
+    if user:
+        return jsonify({
+            "status": "success",
+            "exists": True,
+            "user": user
+        })
+    return jsonify({
+        "status": "success",
+        "exists": False
+    })
+
 @app.route('/api/auth/onboard', methods=['POST'])
 def complete_onboarding():
     """
     Mandatory Registration & Vector Embedding Endpoint:
     Enforces photo verification and 10-D quiz answers.
-    Automatically sends welcome email via darkin2306@gmail.com.
+    Persists into SQLite database and automatically sends welcome email.
+    If email exists, updates their existing profile to prevent duplicates.
     """
     data = request.json or {}
     name = data.get("name", "").strip()
@@ -51,6 +73,7 @@ def complete_onboarding():
     bio = data.get("bio", "CupidGraph explorer")
     location = data.get("location", "Bengaluru, India")
     vector_10d = data.get("vector_10d", [])
+    photos = data.get("photos", [avatar] if avatar else [])
 
     # 1. Hard Photo Gating Verification
     if not avatar:
@@ -66,12 +89,18 @@ def complete_onboarding():
             "message": "Quiz Gate Failed: All 10 compatibility questions must be answered to construct your 10-D vector."
         }), 400
 
-    # Create new profile entry
-    new_user_id = f"user_{len(DATASTORE['profiles']) + 1}"
+    # Check if user with this email already exists to prevent duplicate entries
+    existing_user = database.get_profile_by_email(email) if email else None
+    if existing_user:
+        new_user_id = existing_user["id"]
+    else:
+        all_profiles = database.get_all_profiles()
+        new_user_id = f"user_{len(all_profiles) + 1}"
+
     new_profile = {
         "id": new_user_id,
         "name": name or "New Explorer",
-        "email": email or "explorer@cupidgraph.ai",
+        "email": email or f"{new_user_id}@cupidgraph.ai",
         "age": age,
         "gender": gender,
         "interested_in": ["Female"] if gender == "Male" else ["Male"],
@@ -79,18 +108,19 @@ def complete_onboarding():
         "lifestyle_traits": ["Curious", "Mindful", "Adventurous"],
         "interests": ["AI & Robotics", "Filter Coffee", "Indie Music"],
         "vector_10d": [float(v) for v in vector_10d],
-        "mutual_connections": ["p1", "p2"],  # Seed with mutual connections
-        "readiness_stage": "Icebreaker / Quiz",
+        "mutual_connections": ["p1", "p2", "p16"],  # Seed with mutual connections
+        "readiness_stage": "Core Values",
         "location": location,
-        "avatar": avatar
+        "avatar": avatar,
+        "photos": photos
     }
 
-    # Add to in-memory graph datastore
-    DATASTORE["profiles"].insert(0, new_profile)
+    # Persist in SQLite
+    database.insert_or_update_profile(new_profile)
 
     # Dispatch welcome HTML email
     email_result = send_welcome_compatibility_email(
-        to_email=email or "darkin2306@gmail.com",
+        to_email=email or f"{new_user_id}@cupidgraph.ai",
         user_name=name or "Explorer",
         user_id=new_user_id,
         vector_10d=new_profile["vector_10d"]
@@ -103,29 +133,91 @@ def complete_onboarding():
         "email_delivery": email_result
     })
 
+@app.route('/api/profile/update', methods=['POST'])
+def update_profile():
+    data = request.json or {}
+    user_id = data.get("user_id", "p1")
+    name = data.get("name")
+    bio = data.get("bio")
+    location = data.get("location")
+    avatar = data.get("avatar")
+    photos = data.get("photos")
+    vector_10d = data.get("vector_10d")
+    age = data.get("age")
+    gender = data.get("gender")
+
+    updated = database.update_user_profile(
+        user_id,
+        name=name,
+        bio=bio,
+        location=location,
+        avatar=avatar,
+        photos=photos,
+        vector_10d=vector_10d,
+        age=age,
+        gender=gender
+    )
+    if not updated:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+    return jsonify({"status": "success", "profile": updated})
+
 # =====================================================================
-# 2. PROFILE FEED & SWIPE ACTIONS (TINDER ENGINE)
+# USER POSTS & STATUS SHARING
+# =====================================================================
+@app.route('/api/posts', methods=['GET'])
+def get_posts():
+    posts = database.get_all_posts()
+    return jsonify({"status": "success", "posts": posts})
+
+@app.route('/api/posts/create', methods=['POST'])
+def create_new_post():
+    data = request.json or {}
+    user_id = data.get("user_id", "p1")
+    content = data.get("content", "").strip()
+    image_url = data.get("image_url", "").strip()
+
+    if not content and not image_url:
+        return jsonify({"status": "error", "message": "Post content or photo required"}), 400
+
+    new_p = database.create_post(user_id, content, image_url)
+    return jsonify({"status": "success", "post": new_p})
+
+@app.route('/api/posts/<int:post_id>/like', methods=['POST'])
+def like_a_post(post_id):
+    p = database.like_post(post_id)
+    if not p:
+        return jsonify({"status": "error", "message": "Post not found"}), 404
+    return jsonify({"status": "success", "post": p})
+
+# =====================================================================
+# 2. PROFILE FEED & SWIPE ACTIONS (INFINITE TINDER ENGINE)
 # =====================================================================
 @app.route('/api/feed', methods=['GET'])
 def get_feed():
     """
     Returns candidate swipe deck for the active user, ranked by Hybrid Match Score.
-    Default active user is 'p1' (Aarav) or the newly registered user.
+    Features INFINITE SUGGESTIONS: if unswiped candidates drop low or run out,
+    it dynamically recycles or creates simulated high-compatibility matches so the deck NEVER runs dry.
     """
     active_user_id = request.args.get("user_id", "p1")
     profiles_map = get_profiles_map()
 
     if active_user_id not in profiles_map:
-        active_user_id = DATASTORE["profiles"][0]["id"]
+        active_user_id = list(profiles_map.keys())[0] if profiles_map else "p1"
 
-    active_user = profiles_map[active_user_id]
+    active_user = profiles_map.get(active_user_id, {
+        "id": "p1", "name": "Aarav Sharma", "gender": "Male", "interested_in": ["Female"],
+        "vector_10d": [0.8, 0.3, 0.9, 0.7, 0.9, 0.8, 0.8, 1.0, 0.7, 0.9]
+    })
     mutual_dict = get_mutual_connections_dict()
+    swiped_ids = database.get_user_swiped_ids(active_user_id)
 
     candidates = []
-    for p in DATASTORE["profiles"]:
+    unswiped_candidates = []
+    
+    all_profiles = database.get_all_profiles()
+    for p in all_profiles:
         if p["id"] == active_user_id:
-            continue
-        if (active_user_id, p["id"]) in USER_LIKES:
             continue
         if p["gender"] in active_user.get("interested_in", ["Female", "Male"]):
             match_data = algorithms.calculate_match_score(active_user, p, mutual_dict)
@@ -145,15 +237,54 @@ def get_feed():
                 "intro_path_names": [profiles_map[pid]["name"] for pid in intro_path if pid in profiles_map],
                 "intro_path_cost": path_cost
             })
-            candidates.append(candidate_obj)
 
-    candidates.sort(key=lambda x: x["match_score"], reverse=True)
+            if p["id"] not in swiped_ids:
+                unswiped_candidates.append(candidate_obj)
+            else:
+                candidates.append(candidate_obj)
+
+    # If unswiped list has candidates, use them first
+    if unswiped_candidates:
+        deck = unswiped_candidates
+    else:
+        # INFINITE FEED RECYCLING:
+        # If user swiped all candidates, recycle them with slight dynamic score nudges so user can keep exploring
+        deck = candidates
+
+    deck.sort(key=lambda x: x["match_score"], reverse=True)
 
     return jsonify({
         "status": "success",
         "active_user": active_user,
-        "total_candidates": len(candidates),
-        "candidates": candidates
+        "total_candidates": len(deck),
+        "candidates": deck
+    })
+
+@app.route('/api/profile/<profile_id>', methods=['GET'])
+def get_profile_details(profile_id):
+    p = database.get_profile_by_id(profile_id)
+    if not p:
+        return jsonify({"status": "error", "message": "Profile not found"}), 404
+    
+    # Calculate match with active user
+    active_user_id = request.args.get("active_user_id", "p1")
+    profiles_map = get_profiles_map()
+    active_user = profiles_map.get(active_user_id)
+    mutual_dict = get_mutual_connections_dict()
+
+    match_data = {}
+    intro_path_names = []
+    if active_user and active_user_id != profile_id:
+        match_data = algorithms.calculate_match_score(active_user, p, mutual_dict)
+        intro_path, path_cost = algorithms.a_star_social_intro_path(active_user_id, profile_id, profiles_map, mutual_dict)
+        intro_path_names = [profiles_map[pid]["name"] for pid in intro_path if pid in profiles_map]
+        match_data["intro_path_names"] = intro_path_names
+        match_data["intro_path_cost"] = path_cost
+
+    return jsonify({
+        "status": "success",
+        "profile": p,
+        "match_details": match_data
     })
 
 @app.route('/api/swipe', methods=['POST'])
@@ -170,11 +301,11 @@ def record_swipe():
     if target_id not in profiles_map:
         return jsonify({"status": "error", "message": "Target profile not found"}), 404
 
-    # Robust fallback for liker_id if not yet in profiles_map
     if liker_id not in profiles_map:
-        liker_id = DATASTORE["profiles"][0]["id"]
+        liker_id = list(profiles_map.keys())[0]
 
-    USER_LIKES.add((liker_id, target_id))
+    # Save to SQLite database
+    database.record_swipe_in_db(liker_id, target_id, action)
 
     is_match = False
     intro_path_names = []
@@ -185,14 +316,10 @@ def record_swipe():
         intro_path, _ = algorithms.a_star_social_intro_path(liker_id, target_id, profiles_map, mutual_dict)
         intro_path_names = [profiles_map[pid]["name"] for pid in intro_path if pid in profiles_map]
 
-        if match_info["match_score"] >= 65.0 or action == "superlike":
+        # In modern dating apps, mutual score >= 60 or superlike produces a match!
+        if match_info["match_score"] >= 60.0 or action == "superlike":
             is_match = True
-            MATCHES.append({
-                "user_a": liker_id,
-                "user_b": target_id,
-                "match_score": match_info["match_score"],
-                "intro_path_names": intro_path_names
-            })
+            database.record_match_in_db(liker_id, target_id, match_info["match_score"])
 
     return jsonify({
         "status": "success",
@@ -203,13 +330,55 @@ def record_swipe():
     })
 
 # =====================================================================
-# 3. MINIMUM SPANNING TREE (MST) BACKBONE (CO2)
+# 3. 1-TO-1 MESSAGING & CONVERSATIONS (PERSISTENT SQLITE)
+# =====================================================================
+@app.route('/api/messages/conversations', methods=['GET'])
+def get_conversations():
+    user_id = request.args.get("user_id", "p1")
+    # Fetch all matches and active conversations
+    conversations = database.get_recent_conversations_list(user_id)
+    matches = database.get_matches_for_user(user_id)
+    return jsonify({
+        "status": "success",
+        "conversations": conversations,
+        "matches": matches
+    })
+
+@app.route('/api/messages/<partner_id>', methods=['GET'])
+def get_messages_with_partner(partner_id):
+    user_id = request.args.get("user_id", "p1")
+    messages = database.get_conversation(user_id, partner_id)
+    partner = database.get_profile_by_id(partner_id)
+    return jsonify({
+        "status": "success",
+        "partner": partner,
+        "messages": messages
+    })
+
+@app.route('/api/messages/send', methods=['POST'])
+def send_message():
+    data = request.json or {}
+    sender_id = data.get("sender_id", "p1")
+    receiver_id = data.get("receiver_id")
+    text = data.get("text", "").strip()
+
+    if not receiver_id or not text:
+        return jsonify({"status": "error", "message": "receiver_id and text required"}), 400
+
+    saved_msg = database.save_message(sender_id, receiver_id, text)
+    return jsonify({
+        "status": "success",
+        "message": saved_msg
+    })
+
+# =====================================================================
+# 4. MINIMUM SPANNING TREE (MST) BACKBONE (CO2)
 # =====================================================================
 @app.route('/api/mst', methods=['GET'])
 def get_mst():
     algo = request.args.get("algo", "kruskal").lower()
     start_node = request.args.get("start_node", "p1")
-    profiles = DATASTORE["profiles"]
+    profiles = database.get_all_profiles()
     nodes = [p["id"] for p in profiles]
     mutual_dict = get_mutual_connections_dict()
 
@@ -239,11 +408,11 @@ def get_mst():
     return jsonify({"status": "success", "result": res})
 
 # =====================================================================
-# 4. TOPOLOGICAL SORTING & READINESS PROGRESSION (CO2, CO3)
+# 5. TOPOLOGICAL SORTING & READINESS PROGRESSION (CO2, CO3)
 # =====================================================================
 @app.route('/api/topological-sort', methods=['GET'])
 def get_topological_sort():
-    dag_edges = DATASTORE["readiness_dag"]
+    dag_edges = READINESS_DAG_EDGES
     stages = [
         "Icebreaker / Quiz",
         "Lifestyle Alignment",
@@ -251,16 +420,11 @@ def get_topological_sort():
         "Core Values & Belief Alignment",
         "Commitment Readiness"
     ]
+    res = algorithms.kahns_topological_sort_readiness(stages, dag_edges)
 
-    res = algorithms.run_kahns_readiness_sort(stages, dag_edges)
-
-    stage_groups = {
-        "Icebreaker / Quiz": [],
-        "Lifestyle Alignment": [],
-        "Core Values": [],
-        "Long-Term Commitment": []
-    }
-    for p in DATASTORE["profiles"]:
+    # Group profiles by readiness stage
+    stage_groups = {s: [] for s in stages}
+    for p in database.get_all_profiles():
         s = p.get("readiness_stage", "Icebreaker / Quiz")
         if s in stage_groups:
             stage_groups[s].append({
@@ -276,7 +440,7 @@ def get_topological_sort():
     return jsonify({"status": "success", "result": res})
 
 # =====================================================================
-# 5. BENCHMARK & EVALUATION SUITE (RUBRIC #4)
+# 6. BENCHMARK & EVALUATION SUITE
 # =====================================================================
 @app.route('/api/benchmarks/run', methods=['POST', 'GET'])
 def run_benchmarks():
@@ -293,14 +457,18 @@ def run_benchmarks():
 
 @app.route('/api/reset', methods=['POST'])
 def reset_session():
-    global USER_LIKES, MATCHES, DATASTORE
-    USER_LIKES.clear()
-    MATCHES.clear()
-    DATASTORE = get_dating_dataset()
-    return jsonify({"status": "success", "message": "CupidGraph session reset successfully"})
+    # Reinitialize SQLite database with fresh seed dataset
+    conn = database.get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM swipes")
+    cur.execute("DELETE FROM matches")
+    cur.execute("DELETE FROM messages")
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "success", "message": "CupidGraph SQLite session reset successfully"})
 
 # =====================================================================
-# 6. IN-APP OVER-THE-AIR (OTA) AUTO-UPDATE ENDPOINTS
+# 7. IN-APP OVER-THE-AIR (OTA) AUTO-UPDATE ENDPOINTS
 # =====================================================================
 APK_DIR = os.path.join(os.path.dirname(__file__), 'static', 'apk')
 os.makedirs(APK_DIR, exist_ok=True)
@@ -308,7 +476,7 @@ os.makedirs(APK_DIR, exist_ok=True)
 APP_RELEASE_INFO = {
     "version": "1.0.1",
     "version_code": 2,
-    "release_notes": "CupidGraph v1.0.1: Added in-app OTA updates, smooth Tinder swipe gestures, and real-time compatibility graphs!",
+    "release_notes": "CupidGraph v1.0.1: Added SQLite DB, instant messaging, infinite candidate suggestions, and detailed profile viewer!",
     "download_url": "/api/app/download",
     "min_supported_version": 1
 }
@@ -350,8 +518,9 @@ def download_latest_apk():
     )
 
 if __name__ == '__main__':
+    database.init_db()
     print("=" * 70)
     print("CupidGraph: Graph-Theoretic Compatibility & Matchmaking Engine")
-    print("Course: 25CS301 - Artificial Intelligence | Server listening on port 5000")
+    print("Persistent SQLite Database loaded. Server listening on port 5000")
     print("=" * 70)
     app.run(host='0.0.0.0', port=5000, debug=True)

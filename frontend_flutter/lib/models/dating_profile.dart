@@ -12,6 +12,7 @@ class DatingProfile {
   final List<String> lifestyleTraits;
   final List<String> interests;
   final List<String> mutualConnections;
+  final List<double> vector10d;
   
   // AI Prediction Attributes
   final double matchScore;
@@ -38,6 +39,7 @@ class DatingProfile {
     required this.lifestyleTraits,
     required this.interests,
     required this.mutualConnections,
+    this.vector10d = const [],
     this.matchScore = 0.0,
     this.cosineSimilarity = 0.0,
     this.adamicAdarIndex = 0.0,
@@ -64,6 +66,7 @@ class DatingProfile {
       lifestyleTraits: List<String>.from(json['lifestyle_traits'] ?? []),
       interests: List<String>.from(json['interests'] ?? []),
       mutualConnections: List<String>.from(json['mutual_connections'] ?? []),
+      vector10d: (json['vector_10d'] as List<dynamic>?)?.map((v) => (v as num).toDouble()).toList() ?? [],
       matchScore: (json['match_score'] ?? 0.0).toDouble(),
       cosineSimilarity: (json['cosine_similarity'] ?? 0.0).toDouble(),
       adamicAdarIndex: (json['adamic_adar_index'] ?? 0.0).toDouble(),

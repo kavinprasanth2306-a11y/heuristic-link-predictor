@@ -1,6 +1,5 @@
 """
 CupidGraph Automated SMTP Mailer Module
-Sender: darkin2306@gmail.com
 Sends an automated, styled HTML welcome & compatibility receipt upon profile completion.
 Supports fallback/mock logging if live credentials or network blocks are encountered.
 """
@@ -10,7 +9,7 @@ import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-SENDER_EMAIL = os.environ.get("CUPID_SMTP_USER", "darkin2306@gmail.com")
+SENDER_EMAIL = os.environ.get("CUPID_SMTP_USER", "noreply@cupidgraph.ai")
 # In production, set CUPID_SMTP_PASS environment variable with Google App Password
 SENDER_PASSWORD = os.environ.get("CUPID_SMTP_PASS", "") 
 SMTP_SERVER = "smtp.gmail.com"

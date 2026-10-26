@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/dating_profile.dart';
 import '../services/api_service.dart';
+import 'candidate_detail_screen.dart';
+import 'chat_screen.dart';
 
 class SwipeDeckScreen extends StatefulWidget {
   const SwipeDeckScreen({super.key});
@@ -41,6 +43,11 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
       _currentIndex++;
       _cardOffset = Offset.zero;
     });
+
+    // INFINITE SUGGESTIONS: If we reach the end of the loaded deck, reload more candidates seamlessly
+    if (_currentIndex >= _candidates.length) {
+      _loadFeed();
+    }
 
     final res = await ApiService.swipe(
       likerId: ApiService.activeUserId,
@@ -189,8 +196,15 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                       ),
                       onPressed: () {
                         Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Chat opened with ${profile.name}!")),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (ctx) => ChatScreen(
+                              partnerId: profile.id,
+                              partnerName: profile.name,
+                              partnerAvatar: profile.avatar,
+                            ),
+                          ),
                         );
                       },
                       child: const Text("Send Hello 👋"),
@@ -394,6 +408,14 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
               // Swipeable Card
               Expanded(
                 child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (ctx) => CandidateDetailScreen(profile: profile),
+                      ),
+                    );
+                  },
                   onPanUpdate: (details) {
                     setState(() {
                       _cardOffset += details.delta;
@@ -608,11 +630,43 @@ class _SwipeDeckScreenState extends State<SwipeDeckScreen> {
                       child: const Icon(Icons.close, color: const Color(0xFF475569), size: 30),
                     ),
 
+                    // Profile Info
+                    IconButton(
+                      icon: const Icon(Icons.info_outline, color: Colors.white70, size: 26),
+                      tooltip: "View Profile",
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (ctx) => CandidateDetailScreen(profile: profile),
+                          ),
+                        );
+                      },
+                    ),
+
                     // Why Match? (XAI)
                     IconButton(
                       icon: const Icon(Icons.auto_awesome, color: Color(0xFF00F0FF), size: 28),
                       tooltip: "Why Match? (XAI)",
                       onPressed: () => _showWhyMatchSheet(profile),
+                    ),
+
+                    // Quick Message Button
+                    IconButton(
+                      icon: const Icon(Icons.chat_bubble_outline, color: Colors.white70, size: 26),
+                      tooltip: "Message",
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (ctx) => ChatScreen(
+                              partnerId: profile.id,
+                              partnerName: profile.name,
+                              partnerAvatar: profile.avatar,
+                            ),
+                          ),
+                        );
+                      },
                     ),
 
                     // Like Button

@@ -62,6 +62,32 @@ def compute_vector_10d_cosine_similarity(vec_a, vec_b):
     return round(dot_product / (norm_a * norm_b), 4)
 
 
+def compute_profile_cosine_similarity(p1, p2):
+    """
+    Computes cosine similarity between two profiles either via vector_10d if present,
+    or via one-hot encoded lifestyle_traits and interests.
+    """
+    if "vector_10d" in p1 and "vector_10d" in p2:
+        return compute_vector_10d_cosine_similarity(p1["vector_10d"], p2["vector_10d"])
+
+    features_1 = set(p1.get("lifestyle_traits", []) + p1.get("interests", []))
+    features_2 = set(p2.get("lifestyle_traits", []) + p2.get("interests", []))
+
+    if not features_1 or not features_2:
+        return 0.0
+
+    all_features = sorted(list(features_1.union(features_2)))
+    v1 = [1 if f in features_1 else 0 for f in all_features]
+    v2 = [1 if f in features_2 else 0 for f in all_features]
+
+    dot = sum(a * b for a, b in zip(v1, v2))
+    norm1 = math.sqrt(sum(a * a for a in v1))
+    norm2 = math.sqrt(sum(b * b for b in v2))
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    return round(dot / (norm1 * norm2), 4)
+
+
 def compute_adamic_adar_index(u_id, v_id, mutual_dict):
     """
     Adamic-Adar Index on mutual social connections:
